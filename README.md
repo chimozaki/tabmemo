@@ -1,4 +1,4 @@
-# 📒 Tab Memo PWA ver1.1.0
+# 📒 TabMemo
 
 ---
 
