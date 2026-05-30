@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" id="themeColorMeta" content="#11bbbb">
+  <title>Tab Memo ver1.1.0</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Science+Gothic:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-shell">
+  <header class="hero">
+    <div class="hero-title-block">
+      <div class="hero-title-row">
+        <h1>Tab Memo</h1>
+        <span class="app-version">ver 1.1.0</span>
+      </div>
+      <p>思いつきをカテゴリタブで整理</p>
+    </div>
+    <div class="hero-actions">
+      <button id="searchBtn" class="hero-btn" title="検索">🔎</button>
+      <button id="themeBtn" class="hero-btn" title="テーマ切替">🌙</button>
+    </div>
+  </header>
+
+  <!-- 検索パネル：全カテゴリ横断 -->
+  <section id="searchBox" class="search-panel hidden">
+    <input id="searchInput" type="search" placeholder="全カテゴリから検索…">
+    <div id="searchResultCount" class="search-result-count"></div>
+  </section>
+
+  <section class="tab-strip-wrap" id="tabStripWrap">
+    <button id="menuBtn" class="folder-tab" title="カテゴリ一覧">📂</button>
+    <nav id="tabs" class="tabs"></nav>
+  </section>
+
+  <main id="memoList" class="memo-list"></main>
+
+  <div class="bottom-actions">
+    <button id="backupBtn">💾バックアップ</button>
+    <button id="restoreBtn">⏳復元</button>
+  </div>
+
+  </div>
+
+  <div id="floatMenuBackdrop" class="float-menu-backdrop hidden">
+    <div class="float-menu">
+      <button id="floatMemoBtn" class="float-item"><span>📝</span><strong>メモ追加</strong></button>
+      <button id="floatCategoryBtn" class="float-item"><span>📁</span><strong>カテゴリ追加</strong></button>
+    </div>
+  </div>
+
+  <button id="plusBtn" class="fab" title="追加">＋</button>
+
+  <div id="memoEditorModal" class="editor-modal hidden">
+    <div class="editor-card">
+      <h2 id="editorTitle">メモを作成</h2>
+      <input id="memoTitleInput" class="memo-title-input" placeholder="タイトル">
+      <textarea id="memoBodyInput" class="memo-body-input" placeholder="メモ本文"></textarea>
+      <div class="editor-actions">
+        <button id="cancelMemoBtn" class="cancel-btn">キャンセル</button>
+        <button id="saveMemoBtn" class="save-btn">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="categoryModal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <strong>カテゴリ一覧</strong>
+        <button id="closeModalBtn" title="閉じる">✕</button>
+      </div>
+      <div id="categoryList"></div>
+    </div>
+  </div>
+
+  <input id="restoreInput" type="file" accept="application/json" hidden>
+
+  <!-- カテゴリ名入力モーダル -->
+  <div id="catNameModal" class="editor-modal hidden">
+    <div class="editor-card cat-name-card">
+      <h2 id="catNameTitle">カテゴリを追加</h2>
+      <input id="catNameInput" class="memo-title-input" placeholder="カテゴリ名">
+      <div class="editor-actions">
+        <button id="cancelCatBtn" class="cancel-btn">キャンセル</button>
+        <button id="saveCatBtn" class="save-btn">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- バックアップ選択モーダル -->
+  <div id="backupModal" class="editor-modal hidden">
+    <div class="editor-card backup-card">
+      <h2>バックアップ</h2>
+      <p class="backup-desc">保存先を選んでください</p>
+      <div class="backup-options">
+        <button id="backupLocalBtn" class="backup-option-btn">
+          <span class="bk-icon">📥</span>
+          <span class="bk-label">端末に保存</span>
+          <span class="bk-sub">保存先を選ぶ（非対応時はダウンロード）</span>
+        </button>
+        <button id="backupGdriveBtn" class="backup-option-btn" disabled>
+          <span class="bk-icon">☁️</span>
+          <span class="bk-label">Google ドライブ</span>
+          <span class="bk-sub">Coming soon</span>
+        </button>
+      </div>
+      <div class="editor-actions">
+        <button id="cancelBackupBtn" class="cancel-btn">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 削除確認（軽量バー） -->
+  <div id="confirmBar" class="confirm-bar hidden" role="dialog" aria-modal="true" aria-labelledby="confirmBarMessage">
+    <div class="confirm-bar-inner">
+      <p id="confirmBarMessage" class="confirm-bar-message">本当に削除しますか？</p>
+      <div class="confirm-bar-actions">
+        <button type="button" id="confirmBarDelete" class="confirm-bar-btn confirm-bar-delete">削除する</button>
+        <button type="button" id="confirmBarCancel" class="confirm-bar-btn">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,30 @@
+{
+  "name": "Tab Memo ver1.1.0",
+  "short_name": "TabMemo",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0e7fa8",
+  "theme_color": "#11bbbb",
+  "description": "カテゴリタブで切り替えるメモPWA ver1.1.0",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
+
