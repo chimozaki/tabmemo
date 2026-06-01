@@ -1,5 +1,5 @@
 # 📒 TabMemo
-
+![Tab Memo](tabmemo_exsample.png)
 ---
 
 ## 🇯🇵 日本語
@@ -37,6 +37,14 @@ Tab Memo は、カテゴリタブでメモを切り替えて管理できる PWA 
 
 ### リリース状態
 現在の正式版は **ver1.1.0** です。
+
+## ☕ Support
+
+このプロジェクトが役に立った場合は、Ko-fiで今後の開発を応援していただけると嬉しいです。
+
+☕ https://ko-fi.com/puniq
+
+ご支援ありがとうございます！
 
 ---
 
@@ -76,6 +84,13 @@ It is designed to work offline.
 ### Release Status
 Current stable release is **ver1.1.0**.
 
+## ☕ Support
+
+If you find this project useful and would like to support future development, you can support me on Ko-fi.
+
+☕ https://ko-fi.com/puniq
+
+Thank you for your support!
 ---
 
 ## 🇹🇼 繁體中文
@@ -114,6 +129,13 @@ Tab Memo 是一款可用分類分頁管理備忘錄的 PWA。
 ### 發行狀態
 目前正式版本為 **ver1.1.0**。
 
+## ☕ Support
+
+如果這個專案對您有幫助，歡迎透過 Ko-fi 支持後續開發。
+
+☕ https://ko-fi.com/puniq
+
+感謝您的支持！
 ---
 
 ## 🇪🇸 Español
@@ -152,3 +174,10 @@ Está diseñada para funcionar también sin conexión.
 ### Estado de lanzamiento
 La versión estable actual es **ver1.1.0**.
 
+## ☕ Support
+
+Si este proyecto te resulta útil y deseas apoyar su desarrollo futuro, puedes apoyarme en Ko-fi.
+
+☕ https://ko-fi.com/puniq
+
+¡Muchas gracias por tu apoyo!
