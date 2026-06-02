@@ -36,7 +36,7 @@ Tab Memo は、カテゴリタブでメモを切り替えて管理できる PWA 
 - `icon.svg` / `icon-maskable.svg` : アイコン
 
 ### リリース状態
-現在の正式版は **ver1.1.0** です。
+現在の正式版は **ver1.2.0** です。
 
 ## ☕ Support
 
@@ -82,7 +82,7 @@ It is designed to work offline.
 - `icon.svg` / `icon-maskable.svg` : Icons
 
 ### Release Status
-Current stable release is **ver1.1.0**.
+Current stable release is **ver1.2.0**.
 
 ## ☕ Support
 
@@ -127,7 +127,7 @@ Tab Memo 是一款可用分類分頁管理備忘錄的 PWA。
 - `icon.svg` / `icon-maskable.svg` : 圖示
 
 ### 發行狀態
-目前正式版本為 **ver1.1.0**。
+目前正式版本為 **ver1.2.0**。
 
 ## ☕ Support
 
@@ -172,7 +172,7 @@ Está diseñada para funcionar también sin conexión.
 - `icon.svg` / `icon-maskable.svg` : Iconos
 
 ### Estado de lanzamiento
-La versión estable actual es **ver1.1.0**.
+La versión estable actual es **ver1.2.0**.
 
 ## ☕ Support
 

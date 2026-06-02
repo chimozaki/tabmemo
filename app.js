@@ -1,5 +1,5 @@
 // =============================================
-//  Tab Memo 1.1.0
+//  Tab Memo 1.2.0
 //  正式版リリース: 機能安定化とUI最適化
 //
 //  主な変更:
@@ -29,10 +29,20 @@ let touchStartY   = 0;
 let swipeIgnore   = false;
 let selectingMemoBody = false;
 let skipNextEditorBackdropClose = false;
+let selectingCatNameInput = false;
+let skipNextCatNameBackdropClose = false;
 let toastShowTimer = null;
 let toastHideTimer = null;
 
 let confirmDeleteBusy = false;
+let catReorderMode = false;
+let catSelectMode = false;
+let selectedCatIndexes = new Set();
+let catMoveFromIdx = null;
+let memoSelectMode = false;
+let memoReorderMode = false;
+let selectedMemoIndexes = new Set();
+let memoSwapFromIdx = null;
 
 /**
  * 「削除しますか？」の軽量バーでネイティブ confirm を代替する。
@@ -109,7 +119,7 @@ function normalizeData(d) {
 
   if (typeof d.active !== "number" || d.active < 0 || d.active >= d.cats.length) d.active = 0;
   if (typeof d.dark !== "boolean") d.dark = false;
-  d.version = "1.1.0";
+  d.version = "1.2.0";
   return d;
 }
 
@@ -135,7 +145,7 @@ function load() {
   } catch (e) {
     console.warn("Tab Memo: load error", e);
   }
-  return { version: "1.1.0", cats: ["メモ"], active: 0, memos: [[]], dark: false };
+  return { version: "1.2.0", cats: ["メモ"], active: 0, memos: [[]], dark: false };
 }
 
 // ─────────────────────────────────────────────
@@ -157,6 +167,11 @@ const searchInput   = document.getElementById("searchInput");
 const searchCount   = document.getElementById("searchResultCount");
 const tabStripWrap  = document.getElementById("tabStripWrap");
 const toastEl       = document.getElementById("toast");
+const memoReorderBtn = document.getElementById("memoReorderBtn");
+const memoSelectBtn = document.getElementById("memoSelectBtn");
+const categoryReorderToggleBtn = document.getElementById("categoryReorderToggleBtn");
+const categorySelectToggleBtn = document.getElementById("categorySelectToggleBtn");
+const categoryDeleteSelectedBtn = document.getElementById("categoryDeleteSelectedBtn");
 
 // ─────────────────────────────────────────────
 //  テーマ
@@ -197,7 +212,12 @@ function renderTabs() {
       + (i === 0                    ? " first"  : "")
       + (i === data.cats.length - 1 ? " last"   : "");
     t.textContent = c;
-    t.onclick = () => { data.active = i; render(); scrollActiveTabIntoView(); };
+    t.onclick = () => {
+      data.active = i;
+      resetMemoModes(true);
+      render();
+      scrollActiveTabIntoView();
+    };
     tabsEl.appendChild(t);
   });
 }
@@ -206,6 +226,7 @@ function renderTabs() {
 //  検索モード
 // ─────────────────────────────────────────────
 function enterSearchMode() {
+  resetMemoModes(true);
   isSearchMode = true;
   document.body.classList.add("search-mode");
   tabStripWrap.classList.add("hidden");
@@ -311,8 +332,7 @@ async function copyTextToClipboard(text) {
 }
 
 function toCopyText(title, text) {
-  const joined = title ? `${title}\n${text || ""}` : (text || "");
-  return joined.trim();
+  return String(text || "").trim();
 }
 
 function showToast(message, isError = false) {
@@ -336,12 +356,176 @@ function showToast(message, isError = false) {
   }, 1200);
 }
 
+function syncMemoModeButtons() {
+  memoReorderBtn.classList.toggle("active", memoReorderMode);
+  memoSelectBtn.classList.toggle("active", memoSelectMode);
+  memoReorderBtn.title = memoReorderMode ? "メモの並び替えを終了" : "メモを並び替え";
+  memoSelectBtn.title = memoSelectMode ? "メモの複数選択を終了" : "メモを複数選択";
+}
+
+function resetMemoModes(skipRender = false) {
+  memoSelectMode = false;
+  memoReorderMode = false;
+  selectedMemoIndexes.clear();
+  memoSwapFromIdx = null;
+  syncMemoModeButtons();
+  if (!skipRender && !isSearchMode) renderMemos();
+}
+
+function toggleMemoSelectMode() {
+  if (isSearchMode) return;
+  memoSelectMode = !memoSelectMode;
+  memoReorderMode = false;
+  selectedMemoIndexes.clear();
+  memoSwapFromIdx = null;
+  syncMemoModeButtons();
+  closeFloat();
+  renderMemos();
+}
+
+function toggleMemoReorderMode() {
+  if (isSearchMode) return;
+  memoReorderMode = !memoReorderMode;
+  memoSelectMode = false;
+  selectedMemoIndexes.clear();
+  memoSwapFromIdx = null;
+  syncMemoModeButtons();
+  closeFloat();
+  renderMemos();
+}
+
+function toggleMemoSelection(idx) {
+  if (selectedMemoIndexes.has(idx)) selectedMemoIndexes.delete(idx);
+  else selectedMemoIndexes.add(idx);
+  renderMemos();
+}
+
+function pinSelectedMemos() {
+  if (!memoSelectMode || selectedMemoIndexes.size === 0) return;
+  const memos = data.memos[data.active];
+  const selected = [...selectedMemoIndexes];
+  const allPinned = selected.every((idx) => memos[idx] && memos[idx].pinned);
+  selected.forEach((idx) => {
+    if (memos[idx]) memos[idx].pinned = !allPinned;
+  });
+  render();
+}
+
+function deleteSelectedMemos() {
+  if (!memoSelectMode || selectedMemoIndexes.size === 0) return;
+  confirmDelete((ok) => {
+    if (!ok) return;
+    const memos = data.memos[data.active];
+    [...selectedMemoIndexes].sort((a, b) => b - a).forEach((idx) => {
+      if (idx >= 0 && idx < memos.length) memos.splice(idx, 1);
+    });
+    selectedMemoIndexes.clear();
+    if (memos.length === 0) memoSelectMode = false;
+    render();
+  });
+}
+
+function swapMemo(aIdx, bIdx) {
+  const memos = data.memos[data.active];
+  if (!memos || aIdx === bIdx) return;
+  if (aIdx < 0 || bIdx < 0 || aIdx >= memos.length || bIdx >= memos.length) return;
+  [memos[aIdx], memos[bIdx]] = [memos[bIdx], memos[aIdx]];
+}
+
+function onMemoReorderTap(idx) {
+  const memos = data.memos[data.active];
+  if (memoSwapFromIdx === null) {
+    memoSwapFromIdx = idx;
+    renderMemos();
+    return;
+  }
+  if (memoSwapFromIdx === idx) {
+    memoSwapFromIdx = null;
+    renderMemos();
+    return;
+  }
+
+  const fromMemo = memos[memoSwapFromIdx];
+  const toMemo = memos[idx];
+  if (!fromMemo || !toMemo) {
+    memoSwapFromIdx = null;
+    renderMemos();
+    return;
+  }
+  if (!!fromMemo.pinned !== !!toMemo.pinned) {
+    showToast("ピン状態が違うメモ同士は入れ替えできません", true);
+    return;
+  }
+
+  swapMemo(memoSwapFromIdx, idx);
+  memoSwapFromIdx = null;
+  render();
+}
+
+function makeMemoModeToolbar(memos) {
+  const bar = document.createElement("div");
+  bar.className = "memo-mode-toolbar";
+
+  const info = document.createElement("div");
+  info.className = "memo-mode-info";
+
+  if (memoSelectMode) {
+    info.textContent = `✅ ${selectedMemoIndexes.size}件選択中`;
+    bar.appendChild(info);
+
+    const pinBtn = document.createElement("button");
+    const selected = [...selectedMemoIndexes];
+    const allPinned = selected.length > 0 && selected.every((idx) => memos[idx] && memos[idx].pinned);
+    pinBtn.textContent = allPinned ? "📍 ピン解除" : "📌 ピン留め";
+    pinBtn.disabled = selected.length === 0;
+    pinBtn.onclick = pinSelectedMemos;
+    bar.appendChild(pinBtn);
+
+    const delBtn = document.createElement("button");
+    delBtn.className = "danger";
+    delBtn.textContent = "🗑 削除";
+    delBtn.disabled = selected.length === 0;
+    delBtn.onclick = deleteSelectedMemos;
+    bar.appendChild(delBtn);
+  } else {
+    if (memoSwapFromIdx === null) {
+      info.textContent = "🔀 入れ替え元メモをタップ";
+    } else {
+      const title = getDisplayTitle(memos[memoSwapFromIdx]) || "(無題)";
+      info.textContent = `🔀 入れ替え先をタップ: ${title}`;
+    }
+    bar.appendChild(info);
+
+    const clearBtn = document.createElement("button");
+    clearBtn.textContent = "選択解除";
+    clearBtn.disabled = memoSwapFromIdx === null;
+    clearBtn.onclick = () => { memoSwapFromIdx = null; renderMemos(); };
+    bar.appendChild(clearBtn);
+  }
+
+  const doneBtn = document.createElement("button");
+  doneBtn.textContent = "完了";
+  doneBtn.onclick = () => resetMemoModes();
+  bar.appendChild(doneBtn);
+
+  return bar;
+}
+
 // ─────────────────────────────────────────────
 //  メモカード生成（通常・検索共通）
 // ─────────────────────────────────────────────
-function makeMemoCard({ title, text, timeStr, badge = null, pinned = false, onTap, onPin, onCopy, onDel }) {
+function makeMemoCard({
+  title, text, timeStr, badge = null, pinned = false,
+  onTap, onPin, onCopy, onDel,
+  selectMode = false, selected = false, onSelect = null,
+  reorderMode = false, moving = false, onReorderTap = null
+}) {
   const article = document.createElement("article");
-  article.className = "memo memo-tappable" + (pinned ? " memo-pinned" : "");
+  article.className = "memo memo-tappable"
+    + (pinned ? " memo-pinned" : "")
+    + (selectMode ? " memo-select-mode" : "")
+    + (selected ? " memo-selected" : "")
+    + (moving ? " memo-moving" : "");
 
   if (badge) {
     const b = document.createElement("div");
@@ -363,45 +547,67 @@ function makeMemoCard({ title, text, timeStr, badge = null, pinned = false, onTa
 
   const actions = document.createElement("div");
   actions.className = "actions";
-  
-  const pinBtn = document.createElement("button");
-  pinBtn.title       = pinned ? "ピンを外す" : "ピン留め";
-  pinBtn.textContent = pinned ? "📌" : "📍";
-  pinBtn.onclick = (e) => { e.stopPropagation(); if (onPin) onPin(); };
-  actions.appendChild(pinBtn);
 
-  if (onCopy) {
-    const copyBtn = document.createElement("button");
-    copyBtn.title = "コピー";
-    copyBtn.textContent = "📋";
-    copyBtn.onclick = async (e) => {
+  if (selectMode) {
+    const check = document.createElement("input");
+    check.type = "checkbox";
+    check.className = "memo-select-check";
+    check.checked = !!selected;
+    check.onclick = (e) => {
       e.stopPropagation();
-      const ok = await onCopy();
-      const prev = copyBtn.textContent;
-      copyBtn.textContent = ok ? "✅" : "⚠️";
-      showToast(ok ? "メモをコピーしました" : "コピーに失敗しました", !ok);
-      copyBtn.disabled = true;
-      setTimeout(() => {
-        copyBtn.textContent = prev;
-        copyBtn.disabled = false;
-      }, 900);
+      if (onSelect) onSelect();
     };
-    actions.appendChild(copyBtn);
+    article.appendChild(check);
+  } else if (!reorderMode) {
+    const pinBtn = document.createElement("button");
+    pinBtn.title       = pinned ? "ピンを外す" : "ピン留め";
+    pinBtn.textContent = pinned ? "📌" : "📍";
+    pinBtn.onclick = (e) => { e.stopPropagation(); if (onPin) onPin(); };
+    actions.appendChild(pinBtn);
+
+    if (onCopy) {
+      const copyBtn = document.createElement("button");
+      copyBtn.title = "コピー";
+      copyBtn.textContent = "📋";
+      copyBtn.onclick = async (e) => {
+        e.stopPropagation();
+        const ok = await onCopy();
+        const prev = copyBtn.textContent;
+        copyBtn.textContent = ok ? "✅" : "⚠️";
+        showToast(ok ? "メモをコピーしました" : "コピーに失敗しました", !ok);
+        copyBtn.disabled = true;
+        setTimeout(() => {
+          copyBtn.textContent = prev;
+          copyBtn.disabled = false;
+        }, 900);
+      };
+      actions.appendChild(copyBtn);
+    }
+
+    const delBtn = document.createElement("button");
+    delBtn.title       = "削除";
+    delBtn.textContent = "🗑";
+    delBtn.onclick = (e) => { e.stopPropagation(); onDel(); };
+    actions.appendChild(delBtn);
+    article.appendChild(actions);
   }
-  
-  const delBtn = document.createElement("button");
-  delBtn.title       = "削除";
-  delBtn.textContent = "🗑";
-  delBtn.onclick = (e) => { e.stopPropagation(); onDel(); };
-  actions.appendChild(delBtn);
-  article.appendChild(actions);
 
   const timeEl = document.createElement("div");
   timeEl.className   = "time";
   timeEl.textContent = timeStr;
   article.appendChild(timeEl);
 
-  article.onclick = (e) => { if (!e.target.closest(".actions")) onTap(); };
+  article.onclick = (e) => {
+    if (selectMode) {
+      if (onSelect) onSelect();
+      return;
+    }
+    if (reorderMode) {
+      if (onReorderTap) onReorderTap();
+      return;
+    }
+    if (!e.target.closest(".actions")) onTap();
+  };
 
   return article;
 }
@@ -435,12 +641,30 @@ function renderMemos() {
   listEl.innerHTML = "";
   const addMemoBtnRow = makeInlineAddMemoButton();
   const memos = data.memos[data.active];
+
+  if (!memoSelectMode) selectedMemoIndexes.clear();
+  if (!memoReorderMode) memoSwapFromIdx = null;
+
+  if (memos) {
+    selectedMemoIndexes.forEach((idx) => {
+      if (idx < 0 || idx >= memos.length) selectedMemoIndexes.delete(idx);
+    });
+    if (memoSwapFromIdx !== null && (memoSwapFromIdx < 0 || memoSwapFromIdx >= memos.length)) {
+      memoSwapFromIdx = null;
+    }
+  }
+
   if (!memos || memos.length === 0) {
+    if (memoSelectMode || memoReorderMode) resetMemoModes(true);
     document.body.classList.add("empty-list");
     listEl.appendChild(addMemoBtnRow);
     return;
   }
   document.body.classList.remove("empty-list");
+
+  if (memoSelectMode || memoReorderMode) {
+    listEl.appendChild(makeMemoModeToolbar(memos));
+  }
 
   // ピン留めメモと通常メモを分ける
   const pinnedMemos = memos.filter(m => m.pinned);
@@ -468,7 +692,13 @@ function renderMemos() {
       onTap:   () => openEditor(originalIdx, data.active, false),
       onPin:   () => { m.pinned = !m.pinned; render(); },
       onCopy:  () => copyTextToClipboard(toCopyText(getDisplayTitle(m), m.text)),
-      onDel:   () => del(originalIdx)
+      onDel:   () => del(originalIdx),
+      selectMode: memoSelectMode,
+      selected: selectedMemoIndexes.has(originalIdx),
+      onSelect: () => toggleMemoSelection(originalIdx),
+      reorderMode: memoReorderMode,
+      moving: memoReorderMode && memoSwapFromIdx === originalIdx,
+      onReorderTap: () => onMemoReorderTap(originalIdx)
     });
     listEl.appendChild(card);
   });
@@ -479,55 +709,133 @@ function renderMemos() {
 // ─────────────────────────────────────────────
 //  カテゴリモーダル描画
 // ─────────────────────────────────────────────
+function resetCategoryModalState() {
+  catReorderMode = false;
+  catSelectMode = false;
+  selectedCatIndexes.clear();
+  catMoveFromIdx = null;
+}
+
+function syncCategoryToolbar() {
+  categoryReorderToggleBtn.classList.toggle("active", catReorderMode);
+  categoryReorderToggleBtn.textContent = catReorderMode ? "🔀 並び替え終了" : "🔀 並び替え";
+
+  categorySelectToggleBtn.classList.toggle("active", catSelectMode);
+  categorySelectToggleBtn.textContent = catSelectMode ? `✅ 選択中 (${selectedCatIndexes.size})` : "✅ 複数選択";
+
+  categoryDeleteSelectedBtn.classList.toggle("hidden", !catSelectMode);
+  categoryDeleteSelectedBtn.disabled = !catSelectMode || selectedCatIndexes.size === 0;
+}
+
+function swapCat(aIdx, bIdx) {
+  if (aIdx === bIdx) return;
+  if (aIdx < 0 || bIdx < 0 || aIdx >= data.cats.length || bIdx >= data.cats.length) return;
+  [data.cats[aIdx], data.cats[bIdx]] = [data.cats[bIdx], data.cats[aIdx]];
+  [data.memos[aIdx], data.memos[bIdx]] = [data.memos[bIdx], data.memos[aIdx]];
+  if (data.active === aIdx) data.active = bIdx;
+  else if (data.active === bIdx) data.active = aIdx;
+  render();
+  renderCategoryModal();
+}
+
+function toggleCategorySelection(i) {
+  if (selectedCatIndexes.has(i)) selectedCatIndexes.delete(i);
+  else selectedCatIndexes.add(i);
+  renderCategoryModal();
+}
+
 function renderCategoryModal() {
   const box = document.getElementById("categoryList");
   box.innerHTML = "";
+  syncCategoryToolbar();
+
+  if (catReorderMode) {
+    const guide = document.createElement("div");
+    guide.className = "category-reorder-guide";
+    guide.textContent = catMoveFromIdx === null
+      ? "🔀 入れ替え元カテゴリをタップ"
+      : `🔀 入れ替え先をタップ: ${data.cats[catMoveFromIdx]}`;
+    box.appendChild(guide);
+  }
 
   data.cats.forEach((c, i) => {
     const row = document.createElement("div");
     row.className = "category-row";
+    if (catSelectMode && selectedCatIndexes.has(i)) row.classList.add("selected");
+    if (catReorderMode && catMoveFromIdx === i) row.classList.add("moving");
 
-    const nameEl = document.createElement("div");
-    nameEl.className   = "category-name";
-    nameEl.textContent = c;
-    nameEl.onclick = () => {
+    row.onclick = () => {
+      if (catSelectMode) {
+        toggleCategorySelection(i);
+        return;
+      }
+      if (catReorderMode) {
+        if (catMoveFromIdx === null) {
+          catMoveFromIdx = i;
+          renderCategoryModal();
+          return;
+        }
+        if (catMoveFromIdx === i) {
+          catMoveFromIdx = null;
+          renderCategoryModal();
+          return;
+        }
+        const fromIdx = catMoveFromIdx;
+        catMoveFromIdx = null;
+        swapCat(fromIdx, i);
+        return;
+      }
       data.active = i;
+      resetMemoModes(true);
       closeModal();
       render();
       scrollActiveTabIntoView();
     };
 
-    const renameBtn = document.createElement("button");
-    renameBtn.className   = "rename-btn";
-    renameBtn.title       = "名前変更";
-    renameBtn.textContent = "📝";
-    renameBtn.onclick = (e) => { e.stopPropagation(); renameCat(i); };
+    if (catSelectMode) {
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.className = "category-select";
+      checkbox.checked = selectedCatIndexes.has(i);
+      checkbox.onclick = (e) => {
+        e.stopPropagation();
+        toggleCategorySelection(i);
+      };
+      row.appendChild(checkbox);
+    }
 
-    const delBtn = document.createElement("button");
-    delBtn.title       = "削除";
-    delBtn.textContent = "🗑";
-    delBtn.onclick = (e) => { e.stopPropagation(); deleteCat(i); };
-
+    const nameEl = document.createElement("div");
+    nameEl.className   = "category-name";
+    nameEl.textContent = c;
     row.appendChild(nameEl);
-    row.appendChild(renameBtn);
-    row.appendChild(delBtn);
+
+    const actions = document.createElement("div");
+    actions.className = "category-actions";
+
+    if (catReorderMode) {
+      const orderBadge = document.createElement("span");
+      orderBadge.className = "category-order-badge";
+      orderBadge.textContent = String(i + 1);
+      actions.appendChild(orderBadge);
+    } else {
+      const renameBtn = document.createElement("button");
+      renameBtn.className   = "rename-btn";
+      renameBtn.title       = "名前変更";
+      renameBtn.textContent = "📝";
+      renameBtn.onclick = (e) => { e.stopPropagation(); renameCat(i); };
+
+      const delBtn = document.createElement("button");
+      delBtn.title       = "削除";
+      delBtn.textContent = "🗑";
+      delBtn.onclick = (e) => { e.stopPropagation(); deleteCat(i); };
+
+      actions.appendChild(renameBtn);
+      actions.appendChild(delBtn);
+    }
+
+    row.appendChild(actions);
     box.appendChild(row);
   });
-
-  const addWrap = document.createElement("div");
-  addWrap.className = "category-add-row";
-
-  const addBtn = document.createElement("button");
-  addBtn.type = "button";
-  addBtn.className = "category-add-btn";
-  addBtn.textContent = "＋ カテゴリを追加";
-  addBtn.onclick = (e) => {
-    e.stopPropagation();
-    addCat();
-  };
-
-  addWrap.appendChild(addBtn);
-  box.appendChild(addWrap);
 }
 
 // ─────────────────────────────────────────────
@@ -535,6 +843,7 @@ function renderCategoryModal() {
 // ─────────────────────────────────────────────
 function render() {
   applyTheme();
+  syncMemoModeButtons();
   renderTabs();
   renderMemos();
   save();
@@ -630,6 +939,8 @@ function openCatNameModal(title, defaultVal, onSave) {
 function closeCatNameModal() {
   document.getElementById("catNameModal").classList.add("hidden");
   catEditCallback = null;
+  selectingCatNameInput = false;
+  skipNextCatNameBackdropClose = false;
 }
 
 function saveCatName() {
@@ -640,12 +951,46 @@ function saveCatName() {
   if (onSave) onSave(name);
 }
 
+function deleteSelectedCats() {
+  if (!catSelectMode || selectedCatIndexes.size === 0) return;
+  if (data.cats.length - selectedCatIndexes.size < 1) {
+    alert("カテゴリは最低1つ必要です。");
+    return;
+  }
+
+  confirmDelete((ok) => {
+    if (!ok) return;
+    const keepIndexes = data.cats
+      .map((_, i) => i)
+      .filter((i) => !selectedCatIndexes.has(i));
+
+    const deletedActive = selectedCatIndexes.has(data.active);
+    data.cats = keepIndexes.map((i) => data.cats[i]);
+    data.memos = keepIndexes.map((i) => data.memos[i]);
+
+    if (deletedActive) {
+      const nextActive = keepIndexes.findIndex((i) => i > data.active);
+      data.active = nextActive >= 0 ? nextActive : data.cats.length - 1;
+    } else {
+      data.active = keepIndexes.indexOf(data.active);
+    }
+
+    catSelectMode = false;
+    selectedCatIndexes.clear();
+    resetMemoModes(true);
+    render();
+    renderCategoryModal();
+    scrollActiveTabIntoView();
+  });
+}
+
 function addCat() {
   const categoryModalOpen = !document.getElementById("categoryModal").classList.contains("hidden");
   openCatNameModal("カテゴリを追加", "", (name) => {
     data.cats.push(name);
     data.memos.push([]);
     data.active = data.cats.length - 1;
+    resetMemoModes(true);
     render();
     if (categoryModalOpen) renderCategoryModal();
     scrollActiveTabIntoView();
@@ -668,6 +1013,8 @@ function deleteCat(i) {
     data.cats.splice(i, 1);
     data.memos.splice(i, 1);
     if (data.active >= data.cats.length) data.active = data.cats.length - 1;
+    selectedCatIndexes.clear();
+    resetMemoModes(true);
     closeModal();
     render();
     scrollActiveTabIntoView();
@@ -687,6 +1034,7 @@ function moveCategory(dir) {
   const next = data.active + dir;
   if (next < 0 || next >= data.cats.length) return;
   data.active = next;
+  resetMemoModes(true);
   render();
   scrollActiveTabIntoView();
 }
@@ -730,12 +1078,14 @@ function setupResizeHandler() {
 //  カテゴリモーダル開閉
 // ─────────────────────────────────────────────
 function openModal() {
+  resetCategoryModalState();
   renderCategoryModal();
   document.getElementById("categoryModal").classList.remove("hidden");
 }
 
 function closeModal() {
   document.getElementById("categoryModal").classList.add("hidden");
+  resetCategoryModalState();
 }
 
 // ─────────────────────────────────────────────
@@ -787,13 +1137,52 @@ document.getElementById("catNameInput").addEventListener("keydown", (e) => {
   if (e.key === "Enter") saveCatName();
   if (e.key === "Escape") closeCatNameModal();
 });
+document.getElementById("catNameInput").addEventListener("pointerdown", () => {
+  selectingCatNameInput = true;
+});
+window.addEventListener("pointerup", () => {
+  if (!selectingCatNameInput) return;
+  selectingCatNameInput = false;
+  const catNameInput = document.getElementById("catNameInput");
+  if (catNameInput.selectionStart !== catNameInput.selectionEnd) {
+    skipNextCatNameBackdropClose = true;
+    setTimeout(() => { skipNextCatNameBackdropClose = false; }, 250);
+  }
+}, true);
 document.getElementById("catNameModal").onclick = (e) => {
-  if (e.target.id === "catNameModal") closeCatNameModal();
+  if (e.target.id !== "catNameModal") return;
+  if (skipNextCatNameBackdropClose) {
+    skipNextCatNameBackdropClose = false;
+    return;
+  }
+  closeCatNameModal();
 };
 
 // カテゴリモーダル
 document.getElementById("menuBtn").onclick        = openModal;
 document.getElementById("closeModalBtn").onclick  = closeModal;
+document.getElementById("categoryAddBtn").onclick = () => addCat();
+categoryReorderToggleBtn.onclick = () => {
+  catReorderMode = !catReorderMode;
+  if (catReorderMode) {
+    catSelectMode = false;
+    selectedCatIndexes.clear();
+  } else {
+    catMoveFromIdx = null;
+  }
+  renderCategoryModal();
+};
+categorySelectToggleBtn.onclick = () => {
+  catSelectMode = !catSelectMode;
+  if (catSelectMode) {
+    catReorderMode = false;
+    catMoveFromIdx = null;
+  } else {
+    selectedCatIndexes.clear();
+  }
+  renderCategoryModal();
+};
+categoryDeleteSelectedBtn.onclick = deleteSelectedCats;
 document.getElementById("categoryModal").onclick  = (e) => {
   if (e.target.id === "categoryModal") closeModal();
 };
@@ -810,6 +1199,14 @@ document.getElementById("searchBtn").onclick = () => {
   }
 };
 searchInput.oninput = () => { if (isSearchMode) renderSearch(); };
+document.addEventListener("pointerdown", (e) => {
+  if (!isSearchMode) return;
+  if (e.target.closest("#searchBox, #searchBtn")) return;
+  searchBox.classList.add("hidden");
+  exitSearchMode();
+});
+memoReorderBtn.onclick = toggleMemoReorderMode;
+memoSelectBtn.onclick = toggleMemoSelectMode;
 
 // テーマ
 document.getElementById("themeBtn").onclick = () => { data.dark = !data.dark; render(); };

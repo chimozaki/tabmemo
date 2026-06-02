@@ -100,14 +100,16 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
   display: flex;
   align-items: baseline;
   gap: 10px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  min-width: 0;
 }
 .hero h1 {
   margin: 0;
   font-size: 42px;
   line-height: .96;
-  letter-spacing: -.055em;
+  letter-spacing: 0;
   color: var(--text);
+  white-space: nowrap;
 }
 .app-version {
   font-size: 15px;
@@ -128,18 +130,32 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 }
 .hero-actions { display: flex; gap: 8px; align-items: center; padding-bottom: 4px; }
 .hero-btn {
-  width: 46px; height: 46px;
+  width: 42px; height: 42px;
   border: 1px solid var(--line); border-radius: 17px;
   background: var(--surface); color: var(--text);
   display: grid; place-items: center;
   font-size: 22px;
+}
+.hero-btn.active {
+  background: linear-gradient(135deg, var(--blue), var(--blue2));
+  color: #fff;
+  border-color: color-mix(in srgb, var(--blue2) 72%, var(--line));
+}
+.hero-btn.hero-mode-btn {
+  width: auto;
+  min-width: 70px;
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 /* =============================================
    検索パネル
    ============================================= */
 .search-panel {
-  padding: 0 12px;
+  padding: 0 8px;
   background: var(--surface);
 }
 .search-panel input {
@@ -149,7 +165,8 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
   background: var(--surface);
   color: var(--text);
   outline: 0;
-  padding: 10px 12px;
+  padding: 12px 14px;
+  min-height: 46px;
 }
 .search-result-count {
   font-size: 12px;
@@ -257,6 +274,43 @@ body.dark .memo-list {
   border-top: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
   background: var(--surface);
 }
+.memo-mode-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface-soft) 82%, var(--surface));
+}
+.memo-mode-info {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+  margin-right: auto;
+}
+.memo-mode-toolbar button {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.memo-mode-toolbar .danger {
+  border-color: #fda4af;
+  color: #b91c1c;
+  background: #fff1f2;
+}
+body.dark .memo-mode-toolbar .danger {
+  border-color: #9f1239;
+  color: #fecdd3;
+  background: #4c0519;
+}
 .memo-add-btn {
   width: 100%;
   border: 0;
@@ -281,10 +335,26 @@ body.dark .memo-list {
   min-height: 96px;
   background: var(--surface);
 }
+.memo.memo-select-mode {
+  padding-left: 44px;
+}
 body.dark .memo {
   background: var(--surface);
 }
 .memo:first-child { border-top: 0; }
+.memo.memo-selected {
+  background: color-mix(in srgb, var(--blue) 14%, var(--surface));
+}
+.memo.memo-moving {
+  background: color-mix(in srgb, var(--blue2) 20%, var(--surface));
+}
+.memo-select-check {
+  position: absolute;
+  left: 12px;
+  top: 14px;
+  width: 20px;
+  height: 20px;
+}
 
 .memo-pinned {
   background: color-mix(in srgb, var(--line-strong) 8%, var(--surface));
@@ -463,10 +533,15 @@ body.dark .memo {
   display: grid; place-items: center; padding: 16px;
 }
 .modal-card {
-  width: min(645px, 96vw); max-height: min(96svh, 96vh); overflow: hidden;
+  width: min(645px, 100%);
+  max-width: 100%;
+  max-height: min(96svh, 96vh);
+  overflow: hidden;
   background: var(--surface); color: var(--text);
   border-radius: 22px; box-shadow: var(--shadow);
   border: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
 }
 .modal-header {
   display: flex; justify-content: space-between; align-items: center;
@@ -476,15 +551,99 @@ body.dark .memo {
   border: 0; background: transparent;
   color: var(--text); font-size: 18px;
 }
-#categoryList { max-height: min(88svh, 88vh); overflow: auto; }
+.category-modal-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+.category-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.category-tool-btn {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-soft);
+  color: var(--text);
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.category-tool-btn.active {
+  border-color: var(--blue2);
+  background: linear-gradient(135deg, rgba(17, 187, 187, .15), rgba(34, 211, 238, .16));
+}
+.category-tool-btn.danger {
+  margin-left: auto;
+  border-color: #fda4af;
+  color: #b91c1c;
+  background: #fff1f2;
+}
+body.dark .category-tool-btn.danger {
+  border-color: #9f1239;
+  color: #fecdd3;
+  background: #4c0519;
+}
+#categoryList {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  overflow-x: hidden;
+}
+.category-reorder-guide {
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sub);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-soft);
+}
 .category-row {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto auto;
-  gap: 8px; align-items: center;
+  display: flex;
+  min-width: 0;
+  gap: 8px;
+  align-items: center;
   border-bottom: 1px solid var(--line); padding: 10px;
 }
+.category-row.selected {
+  background: rgba(17, 187, 187, .14);
+}
+.category-row.moving {
+  background: rgba(14, 159, 160, .22);
+}
 .category-name {
+  flex: 1;
   overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
   font-weight: 700; cursor: pointer;
+}
+.category-row .category-select {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+}
+.category-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+}
+.category-order-badge {
+  min-width: 30px;
+  height: 30px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface-soft);
+  color: var(--sub);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 800;
 }
 .category-row button {
   width: 34px; height: 34px;
@@ -622,11 +781,21 @@ body.dark .toast.error {
    レスポンシブ：スマホ小
    ============================================= */
 @media (max-width: 420px) {
-  .hero { padding: 30px 14px 8px; gap: 9px; }
-  .hero h1 { font-size: 39px; }
+  .hero {
+    grid-template-columns: 1fr;
+    align-items: start;
+    padding: 30px 14px 8px;
+    gap: 9px;
+  }
+  .hero h1 { font-size: 36px; }
   .app-version { font-size: 13px; }
   .hero p { font-size: 13px; }
-  .hero-btn { width: 44px; height: 44px; border-radius: 16px; font-size: 21px; }
+  .hero-actions {
+    justify-self: start;
+    flex-wrap: wrap;
+  }
+  .hero-btn { width: 42px; height: 42px; border-radius: 16px; font-size: 21px; }
+  .hero-btn.hero-mode-btn { width: auto; min-width: 66px; padding-inline: 7px; font-size: 11px; }
   .tab { min-width: 150px; font-size: 17px; padding: 9px 13px; }
   .memo-title { font-size: 16px; }
   .memo-text { font-size: 16px; }
@@ -686,8 +855,8 @@ body.dark .toast.error {
   }
 
   .search-panel:not(.hidden) {
-    margin-inline: var(--app-inset);
-    width: calc(100% - var(--app-inset) * 2);
+    margin-inline: 0;
+    width: 100%;
     border: 1px solid var(--line-strong);
     border-radius: 8px;
     background: var(--surface);
@@ -845,8 +1014,8 @@ body.dark .toast.error {
   }
 
   .hero-btn {
-    width: 54px;
-    height: 54px;
+    width: 42px;
+    height: 42px;
     font-size: 24px;
     border-radius: 14px;
   }

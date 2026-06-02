@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" id="themeColorMeta" content="#11bbbb">
-  <title>Tab Memo ver1.1.0</title>
+  <title>Tab Memo ver1.2.0</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,19 +18,21 @@
     <div class="hero-title-block">
       <div class="hero-title-row">
         <h1>Tab Memo</h1>
-        <span class="app-version">ver 1.1.0</span>
+        <span class="app-version">ver 1.2.0</span>
       </div>
       <p>思いつきをカテゴリタブで整理</p>
     </div>
     <div class="hero-actions">
       <button id="searchBtn" class="hero-btn" title="検索">🔎</button>
+      <button id="memoReorderBtn" class="hero-btn hero-mode-btn" title="メモを並び替え">🔀 並替</button>
+      <button id="memoSelectBtn" class="hero-btn hero-mode-btn" title="メモを複数選択">✅ 選択</button>
       <button id="themeBtn" class="hero-btn" title="テーマ切替">🌙</button>
     </div>
   </header>
 
   <!-- 検索パネル：全カテゴリ横断 -->
   <section id="searchBox" class="search-panel hidden">
-    <input id="searchInput" type="search" placeholder="全カテゴリから検索…">
+    <input id="searchInput" type="search" placeholder="キーワードで全カテゴリを検索...">
     <div id="searchResultCount" class="search-result-count"></div>
   </section>
 
@@ -75,7 +77,17 @@
         <strong>カテゴリ一覧</strong>
         <button id="closeModalBtn" title="閉じる">✕</button>
       </div>
-      <div id="categoryList"></div>
+      <div class="category-modal-body">
+        <div class="category-toolbar">
+          <button id="categoryReorderToggleBtn" class="category-tool-btn" type="button">🔀 並び替え</button>
+          <button id="categorySelectToggleBtn" class="category-tool-btn" type="button">✅ 複数選択</button>
+          <button id="categoryDeleteSelectedBtn" class="category-tool-btn danger hidden" type="button" disabled>🗑 選択を削除</button>
+        </div>
+        <div id="categoryList"></div>
+      </div>
+      <div class="category-add-row">
+        <button id="categoryAddBtn" type="button" class="category-add-btn">＋ カテゴリを追加</button>
+      </div>
     </div>
   </div>
 
