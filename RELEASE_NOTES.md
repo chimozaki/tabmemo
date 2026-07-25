@@ -1,22 +1,70 @@
 # 🎉 Tab Memo ver1.3.0 Release Notes
 
-## ローカルJSON保存 / Browser-independent local JSON storage
+## ✨ 機能追加 / New Features
 
-- `start_tabmemo.bat` から固定URL `http://localhost:4174/` で起動
-- 本データを `data/tabmemo-data.json` へ自動保存
-- 保存前の状態を `data/tabmemo-data.previous.json` に保持
-- 同一URLにブラウザキャッシュがあれば初回起動時にローカルJSONへ移行
-- 従来の `index.html` 直接起動データは、JSONバックアップを一度復元して移行
-- 以後はブラウザを変更しても同じローカルJSONを自動読込
-- `localStorage` は表示用・障害時の予備キャッシュとして継続利用
-- `index.html` 直接起動時は従来のブラウザ保存で動作
-- 保存中・保存完了は自動で消えるフローティング通知で表示
-- `index.html` 直接起動時と保存エラー時は警告通知を常時表示
-- 直接起動時の常時警告を画面下部の小型チップに変更し、クリックで詳細表示
-- 入力欄から枠外へドラッグ選択した際にモーダルが閉じる問題を修正
-- メモ編集・カテゴリ名・カテゴリ一覧・バックアップ・追加メニューの背景判定を共通化
-- ライト／ダーク共通のピン留め表現として背景色・左アクセント・ピンボタンを統一
-- TabMemoアイコンをブラウザタブのFaviconとして設定
+Tab Memo ver1.3.0 は、ブラウザに依存しないローカルJSON保存に対応したアップデートです。  
+Tab Memo ver1.3.0 introduces browser-independent local JSON storage.
+
+既定ブラウザを変更しても、同じパソコン上のメモデータを引き続き利用できます。  
+Your memo data can now be shared across browsers on the same computer.
+
+---
+
+## ✅ 追加・改善内容 / Updates
+
+- 💾 メモデータを `data/tabmemo-data.json` へ自動保存 / Automatically save memo data to `data/tabmemo-data.json`
+- 🕘 保存前の状態を `data/tabmemo-data.previous.json` に保持 / Keep the previous state in `data/tabmemo-data.previous.json`
+- 🌐 異なるブラウザでも同じローカルJSONを共有 / Share the same local JSON data across different browsers
+- 🗃️ `localStorage` を表示用・障害時の予備キャッシュとして継続利用 / Continue using `localStorage` as a fallback browser cache
+- 🚀 `start_tabmemo.bat` によるワンクリック起動に対応 / Added one-click startup with `start_tabmemo.bat`
+- 🔗 固定URL `http://localhost:4174/` から起動 / Launch from the fixed URL `http://localhost:4174/`
+- 📌 ライト／ダークモードでピン留めメモのデザインを統一 / Unified pinned memo styling across light and dark modes
+- 🎨 ピン留めメモに背景グラデーション・左端アクセント・ピンボタン強調を追加 / Added a background gradient, left accent, and emphasized pin button
+- 💡 保存中・保存完了を自動で消えるフローティング通知で表示 / Show temporary floating notifications while saving and after completion
+- ⚠️ `index.html` 直接起動時の警告を小型チップで表示し、クリックで詳細を展開 / Show a compact expandable warning when opening `index.html` directly
+- 🖼️ Tab MemoアイコンをブラウザタブのFaviconとして設定 / Added the Tab Memo icon as the browser Favicon
+
+---
+
+## 🛠 不具合修正 / Fixes
+
+- 🖱️ メモタイトルを枠外までドラッグ選択すると編集画面が閉じる問題を修正 / Fixed the memo editor closing when dragging title text outside the input
+- 📝 メモ本文・カテゴリ名でも安全にドラッグ選択できるよう改善 / Improved drag selection safety for memo bodies and category names
+- 🪟 メモ編集・カテゴリ名・カテゴリ一覧・バックアップ・追加メニューの背景判定を共通化 / Unified safe backdrop handling across dialogs and menus
+- 📂 カテゴリ複数選択中に保存通知が操作を妨げる問題を改善 / Prevented storage notifications from covering category-selection controls
+
+---
+
+## 🔄 旧データからの移行 / Migration
+
+1. 以前使用していたブラウザで旧Tab Memoを開く / Open the previous Tab Memo in the browser you used before
+2. 「💾バックアップ」からJSONを保存する / Export your data using the Backup button
+3. `start_tabmemo.bat` を実行する / Run `start_tabmemo.bat`
+4. 新しいTab Memoで「⏳復元」を押し、保存したJSONを選択する / Restore the exported JSON in the new Tab Memo
+5. 「✅ ローカルファイルへ保存しました」と表示されるまで待つ / Wait for the local file save notification
+
+移行後は、異なるブラウザから起動しても同じデータが表示されます。  
+After migration, the same data will be available in other browsers.
+
+---
+
+## 🛠 技術情報 / Technical Notes
+
+- ローカル保存サーバー: Node.js標準モジュールのみで動作 / Local storage server uses only Node.js built-in modules
+- 本データ: `data/tabmemo-data.json` / Primary data file: `data/tabmemo-data.json`
+- 直前版: `data/tabmemo-data.previous.json` / Previous data file: `data/tabmemo-data.previous.json`
+- ブラウザ保存キー `tabMemoPwa_v2_0` は継続利用 / Existing browser storage key `tabMemoPwa_v2_0` remains unchanged
+- Service Workerをネットワーク優先・キャッシュフォールバック方式へ変更 / Changed the Service Worker to network-first with cache fallback
+
+---
+
+## ⚠️ 既知の制限 / Known Limitations
+
+- 通常利用では `start_tabmemo.bat` から起動してください / Use `start_tabmemo.bat` for normal operation
+- 起動にはNode.jsが必要です / Node.js is required
+- `index.html` を直接開いた場合はブラウザ内保存のみになります / Directly opening `index.html` uses browser-only storage
+- Tab Memo使用中はローカルサーバーを終了しないでください / Keep the local server running while using Tab Memo
+- Google Driveバックアップは現在未実装です / Google Drive backup is not implemented yet
 
 ---
 
