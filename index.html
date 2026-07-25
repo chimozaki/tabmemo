@@ -4,9 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" id="themeColorMeta" content="#11bbbb">
-  <title>Tab Memo ver1.2.0</title>
+  <title>Tab Memo ver1.3.0</title>
+  <link rel="icon" type="image/svg+xml" href="icon.svg?v=1.3.0">
+  <link rel="shortcut icon" href="icon.svg?v=1.3.0">
+  <link rel="mask-icon" href="icon-maskable.svg?v=1.3.0" color="#0e9fa0">
   <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="apple-touch-icon" href="icon.svg?v=1.3.0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Science+Gothic:wght@400;700;900&display=swap" rel="stylesheet">
@@ -18,7 +21,7 @@
     <div class="hero-title-block">
       <div class="hero-title-row">
         <h1>Tab Memo</h1>
-        <span class="app-version">ver 1.2.0</span>
+        <span class="app-version">ver 1.3.0</span>
       </div>
       <p>思いつきをカテゴリタブで整理</p>
     </div>
@@ -42,6 +45,8 @@
   </section>
 
   <main id="memoList" class="memo-list"></main>
+
+  <div id="storageStatus" class="storage-status storage-status-hidden" role="status" aria-live="polite"></div>
 
   <div class="bottom-actions">
     <button id="backupBtn">💾バックアップ</button>

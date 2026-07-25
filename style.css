@@ -357,8 +357,55 @@ body.dark .memo {
 }
 
 .memo-pinned {
-  background: color-mix(in srgb, var(--line-strong) 8%, var(--surface));
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--line-strong) 18%, var(--surface)),
+      color-mix(in srgb, var(--line-strong) 6%, var(--surface)) 62%,
+      var(--surface)
+    );
   border-top: 2px solid var(--line-strong);
+  box-shadow:
+    inset 4px 0 0 #fbbf24,
+    inset 0 0 0 1px color-mix(in srgb, var(--line-strong) 18%, transparent);
+}
+
+.memo.memo-pinned .pin-btn {
+  border-color: rgba(251, 191, 36, .72);
+  background: color-mix(in srgb, #f59e0b 18%, var(--surface-soft));
+  box-shadow: 0 0 0 2px rgba(251, 191, 36, .12);
+}
+
+body.dark .memo.memo-pinned {
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--line-strong) 38%, var(--surface)),
+      color-mix(in srgb, var(--line-strong) 14%, var(--surface)) 62%,
+      var(--surface)
+    );
+}
+
+body.dark .memo.memo-pinned .pin-btn {
+  background: color-mix(in srgb, #f59e0b 28%, var(--surface-soft));
+}
+
+.memo.memo-pinned.memo-selected {
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--line-strong) 25%, var(--surface)),
+      color-mix(in srgb, var(--blue) 16%, var(--surface)) 70%
+    );
+}
+
+body.dark .memo.memo-pinned.memo-selected {
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--line-strong) 46%, var(--surface)),
+      color-mix(in srgb, var(--blue) 25%, var(--surface)) 70%
+    );
 }
 
 /* 検索結果カテゴリバッジ */
@@ -757,6 +804,117 @@ body.dark .confirm-bar {
   opacity: 0;
   transition: opacity .14s ease, transform .14s ease;
   pointer-events: none;
+}
+
+.storage-status {
+  position: fixed;
+  left: 50%;
+  bottom: calc(max(104px, env(safe-area-inset-bottom, 30px) + 94px) + var(--shell-gap));
+  /* 通常画面の操作より上、カテゴリ・編集モーダルより下に表示する */
+  z-index: 25;
+  width: max-content;
+  max-width: min(88vw, 620px);
+  padding: 11px 16px;
+  border: 1px solid rgba(15, 23, 42, .12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .96);
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+  box-shadow: 0 12px 34px rgba(15, 23, 42, .18);
+  opacity: 0;
+  transform: translate(-50%, 12px) scale(.98);
+  transition: opacity .2s ease, transform .2s ease;
+  pointer-events: none;
+  backdrop-filter: blur(12px);
+}
+
+.storage-status.storage-status-show {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+
+.storage-status.storage-status-hidden {
+  display: none;
+}
+
+.storage-status.storage-status-compact {
+  left: 50%;
+  right: auto;
+  bottom: calc(max(10px, env(safe-area-inset-bottom, 10px)) + var(--shell-gap));
+  width: auto;
+  max-width: calc(100vw - 24px);
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  white-space: nowrap;
+  transform: translate(-50%, 8px) scale(.98);
+  pointer-events: auto;
+  cursor: help;
+}
+
+.storage-status.storage-status-compact.storage-status-show {
+  transform: translate(-50%, 0) scale(1);
+}
+
+.storage-status.storage-status-compact.storage-status-expanded {
+  max-width: min(88vw, 480px);
+  padding: 10px 14px;
+  border-radius: 14px;
+  white-space: normal;
+  cursor: pointer;
+}
+
+.storage-status-saving {
+  border-color: rgba(14, 159, 160, .32);
+  background: rgba(236, 254, 255, .96);
+  color: #0f6f70;
+}
+
+.storage-status-success {
+  border-color: rgba(22, 163, 74, .3);
+  background: rgba(240, 253, 244, .96);
+  color: #166534;
+}
+
+.storage-status-warning {
+  border-color: rgba(217, 119, 6, .38);
+  background: rgba(255, 251, 235, .97);
+  color: #92400e;
+}
+
+.storage-status-error {
+  border-color: rgba(220, 38, 38, .34);
+  background: rgba(254, 242, 242, .97);
+  color: #991b1b;
+}
+
+body.dark .storage-status {
+  border-color: rgba(148, 163, 184, .28);
+  background: rgba(23, 32, 51, .96);
+  color: #e2e8f0;
+}
+
+body.dark .storage-status-saving {
+  border-color: rgba(45, 212, 191, .38);
+  color: #99f6e4;
+}
+
+body.dark .storage-status-success {
+  border-color: rgba(74, 222, 128, .36);
+  color: #bbf7d0;
+}
+
+body.dark .storage-status-warning {
+  border-color: rgba(251, 191, 36, .4);
+  color: #fde68a;
+}
+
+body.dark .storage-status-error {
+  border-color: rgba(248, 113, 113, .42);
+  color: #fecaca;
 }
 .toast.show {
   opacity: 1;

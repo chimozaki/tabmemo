@@ -1,8 +1,8 @@
-// Tab Memo ver1.2.0 Service Worker
+// Tab Memo ver1.3.0 Service Worker
 // - キャッシュ対象はローカルアセットのみ
 // - 外部リクエスト（api等）はキャッシュしない
 
-const CACHE_NAME = "tab-memo-v1-2-0";
+const CACHE_NAME = "tab-memo-v1-3-0";
 const ASSETS = [
   "./",
   "./index.html",
@@ -30,14 +30,22 @@ self.addEventListener("activate", e => {
 self.addEventListener("fetch", e => {
   const url = new URL(e.request.url);
 
+  if (url.pathname.startsWith("/api/")) return;
+
   // 外部リクエスト（別オリジン）はキャッシュせずそのまま通す
   if (url.origin !== self.location.origin) {
     e.respondWith(fetch(e.request));
     return;
   }
 
-  // ローカルアセットはキャッシュ優先・なければネットワーク
+  // ローカルサーバー利用時は更新を優先し、オフライン時だけキャッシュを使う
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request))
+    fetch(e.request)
+      .then(response => {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(e.request, copy));
+        return response;
+      })
+      .catch(() => caches.match(e.request))
   );
 });

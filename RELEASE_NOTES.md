@@ -1,3 +1,25 @@
+# 🎉 Tab Memo ver1.3.0 Release Notes
+
+## ローカルJSON保存 / Browser-independent local JSON storage
+
+- `start_tabmemo.bat` から固定URL `http://localhost:4174/` で起動
+- 本データを `data/tabmemo-data.json` へ自動保存
+- 保存前の状態を `data/tabmemo-data.previous.json` に保持
+- 同一URLにブラウザキャッシュがあれば初回起動時にローカルJSONへ移行
+- 従来の `index.html` 直接起動データは、JSONバックアップを一度復元して移行
+- 以後はブラウザを変更しても同じローカルJSONを自動読込
+- `localStorage` は表示用・障害時の予備キャッシュとして継続利用
+- `index.html` 直接起動時は従来のブラウザ保存で動作
+- 保存中・保存完了は自動で消えるフローティング通知で表示
+- `index.html` 直接起動時と保存エラー時は警告通知を常時表示
+- 直接起動時の常時警告を画面下部の小型チップに変更し、クリックで詳細表示
+- 入力欄から枠外へドラッグ選択した際にモーダルが閉じる問題を修正
+- メモ編集・カテゴリ名・カテゴリ一覧・バックアップ・追加メニューの背景判定を共通化
+- ライト／ダーク共通のピン留め表現として背景色・左アクセント・ピンボタンを統一
+- TabMemoアイコンをブラウザタブのFaviconとして設定
+
+---
+
 # 🎉 Tab Memo ver1.2.0 Release Notes
 
 ## ✨ 機能追加 / New Features

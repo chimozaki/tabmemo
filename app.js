@@ -1,5 +1,5 @@
 // =============================================
-//  Tab Memo 1.2.0
+//  Tab Memo 1.3.0
 //  正式版リリース: 機能安定化とUI最適化
 //
 //  主な変更:
@@ -18,6 +18,68 @@ const LEGACY_KEYS = [
   "tabMemoPwaBeta1",   "tabMemoPwaV7",      "tabMemoPwaV6",
   "tabMemoPwaV5",      "tabMemoPwaV4Complete"
 ];
+const LOCAL_DATA_API = "./api/data";
+
+const LocalFileStore = {
+  available: false,
+  lastPayload: null,
+  saveChain: Promise.resolve(),
+
+  async load() {
+    if (location.protocol === "file:") {
+      return { available: false, exists: false, data: null };
+    }
+
+    const response = await fetch(LOCAL_DATA_API, { cache: "no-store" });
+    if (!response.ok) throw new Error(`local data load failed: ${response.status}`);
+
+    const result = await response.json();
+    this.available = true;
+    return {
+      available: true,
+      exists: result.exists === true,
+      data: result.data ?? null
+    };
+  },
+
+  remember(snapshot) {
+    this.lastPayload = JSON.stringify(snapshot);
+  },
+
+  queueSave(snapshot) {
+    if (!this.available) return;
+
+    const payload = JSON.stringify(snapshot);
+    if (payload === this.lastPayload) return;
+    this.lastPayload = payload;
+    setStorageStatus("💾 ローカルファイルへ保存中...", {
+      type: "saving",
+      duration: 8000
+    });
+
+    this.saveChain = this.saveChain
+      .catch(() => {})
+      .then(async () => {
+        const response = await fetch(LOCAL_DATA_API, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: payload
+        });
+        if (!response.ok) throw new Error(`local data save failed: ${response.status}`);
+        setStorageStatus("✅ ローカルファイルへ保存しました", {
+          type: "success"
+        });
+      })
+      .catch((error) => {
+        this.lastPayload = null;
+        console.warn("Tab Memo: local file save error", error);
+        setStorageStatus("⚠️ ローカルファイルに保存できませんでした。ブラウザ内には保存済みです。", {
+          type: "error",
+          persistent: true
+        });
+      });
+  }
+};
 
 let data          = load();
 let editingIndex  = null;   // 編集中メモのインデックス
@@ -27,10 +89,6 @@ let isSearchMode  = false;
 let touchStartX   = 0;
 let touchStartY   = 0;
 let swipeIgnore   = false;
-let selectingMemoBody = false;
-let skipNextEditorBackdropClose = false;
-let selectingCatNameInput = false;
-let skipNextCatNameBackdropClose = false;
 let toastShowTimer = null;
 let toastHideTimer = null;
 
@@ -119,7 +177,7 @@ function normalizeData(d) {
 
   if (typeof d.active !== "number" || d.active < 0 || d.active >= d.cats.length) d.active = 0;
   if (typeof d.dark !== "boolean") d.dark = false;
-  d.version = "1.2.0";
+  d.version = "1.3.0";
   return d;
 }
 
@@ -145,7 +203,7 @@ function load() {
   } catch (e) {
     console.warn("Tab Memo: load error", e);
   }
-  return { version: "1.2.0", cats: ["メモ"], active: 0, memos: [[]], dark: false };
+  return { version: "1.3.0", cats: ["メモ"], active: 0, memos: [[]], dark: false };
 }
 
 // ─────────────────────────────────────────────
@@ -153,6 +211,7 @@ function load() {
 // ─────────────────────────────────────────────
 function save() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  LocalFileStore.queueSave(data);
 }
 
 // ─────────────────────────────────────────────
@@ -167,11 +226,70 @@ const searchInput   = document.getElementById("searchInput");
 const searchCount   = document.getElementById("searchResultCount");
 const tabStripWrap  = document.getElementById("tabStripWrap");
 const toastEl       = document.getElementById("toast");
+const storageStatusEl = document.getElementById("storageStatus");
 const memoReorderBtn = document.getElementById("memoReorderBtn");
 const memoSelectBtn = document.getElementById("memoSelectBtn");
 const categoryReorderToggleBtn = document.getElementById("categoryReorderToggleBtn");
 const categorySelectToggleBtn = document.getElementById("categorySelectToggleBtn");
 const categoryDeleteSelectedBtn = document.getElementById("categoryDeleteSelectedBtn");
+
+let storageStatusTimer = null;
+let storageStatusHideTimer = null;
+
+function setStorageStatus(message, {
+  type = "info",
+  persistent = false,
+  duration = 2600,
+  compact = false,
+  details = ""
+} = {}) {
+  if (!storageStatusEl) return;
+
+  clearTimeout(storageStatusTimer);
+  clearTimeout(storageStatusHideTimer);
+  storageStatusEl.textContent = message;
+  storageStatusEl.classList.remove(
+    "storage-status-hidden",
+    "storage-status-show",
+    "storage-status-info",
+    "storage-status-saving",
+    "storage-status-success",
+    "storage-status-warning",
+    "storage-status-error",
+    "storage-status-compact",
+    "storage-status-expanded"
+  );
+  storageStatusEl.classList.add(`storage-status-${type}`);
+  storageStatusEl.classList.toggle("storage-status-compact", compact);
+  storageStatusEl.dataset.summary = message;
+  storageStatusEl.dataset.details = details;
+  storageStatusEl.title = compact && details ? "クリックして詳細を表示" : "";
+
+  requestAnimationFrame(() => storageStatusEl.classList.add("storage-status-show"));
+
+  if (!persistent) {
+    storageStatusTimer = setTimeout(() => {
+      storageStatusEl.classList.remove("storage-status-show");
+      storageStatusHideTimer = setTimeout(() => {
+        storageStatusEl.classList.add("storage-status-hidden");
+      }, 220);
+    }, duration);
+  }
+}
+
+storageStatusEl.addEventListener("click", () => {
+  if (!storageStatusEl.classList.contains("storage-status-compact")) return;
+  const details = storageStatusEl.dataset.details;
+  if (!details) return;
+
+  const expanded = storageStatusEl.classList.toggle("storage-status-expanded");
+  storageStatusEl.textContent = expanded
+    ? details
+    : storageStatusEl.dataset.summary;
+  storageStatusEl.title = expanded
+    ? "クリックして閉じる"
+    : "クリックして詳細を表示";
+});
 
 // ─────────────────────────────────────────────
 //  テーマ
@@ -560,6 +678,7 @@ function makeMemoCard({
     article.appendChild(check);
   } else if (!reorderMode) {
     const pinBtn = document.createElement("button");
+    pinBtn.className   = "pin-btn";
     pinBtn.title       = pinned ? "ピンを外す" : "ピン留め";
     pinBtn.textContent = pinned ? "📌" : "📍";
     pinBtn.onclick = (e) => { e.stopPropagation(); if (onPin) onPin(); };
@@ -857,8 +976,6 @@ function openEditor(index = null, catIdx = null, backToModal = false) {
   editingIndex  = index;
   editingCatIdx = catIdx !== null ? catIdx : data.active;
   returnToModal = backToModal;
-  selectingMemoBody = false;
-  skipNextEditorBackdropClose = false;
 
   const isEdit = index !== null;
   document.getElementById("editorTitle").textContent = isEdit ? "メモを編集" : "メモを作成";
@@ -939,8 +1056,6 @@ function openCatNameModal(title, defaultVal, onSave) {
 function closeCatNameModal() {
   document.getElementById("catNameModal").classList.add("hidden");
   catEditCallback = null;
-  selectingCatNameInput = false;
-  skipNextCatNameBackdropClose = false;
 }
 
 function saveCatName() {
@@ -1100,35 +1215,44 @@ function toggleFloat() { isFloatOpen() ? closeFloat() : openFloat(); }
 //  イベント登録
 // ─────────────────────────────────────────────
 
+/**
+ * モーダル内部から始まったドラッグ操作を、背景クリックとして扱わない。
+ * テキスト選択中に枠外でポインターを離してもモーダルを維持する。
+ */
+function setupSafeBackdropClose(overlay, contentSelector, onClose) {
+  let pointerStartedInside = false;
+
+  overlay.addEventListener("pointerdown", (e) => {
+    pointerStartedInside = !!e.target.closest(contentSelector);
+  }, true);
+
+  overlay.addEventListener("click", (e) => {
+    if (e.target !== overlay) {
+      pointerStartedInside = false;
+      return;
+    }
+    if (pointerStartedInside) {
+      pointerStartedInside = false;
+      return;
+    }
+    onClose();
+  });
+}
+
 // FAB・フローティングメニュー
 plusBtn.onclick = toggleFloat;
 document.getElementById("floatMemoBtn").onclick     = () => { closeFloat(); add(); };
 document.getElementById("floatCategoryBtn").onclick = () => { closeFloat(); addCat(); };
-floatBackdrop.onclick = (e) => { if (e.target.id === "floatMenuBackdrop") closeFloat(); };
+setupSafeBackdropClose(floatBackdrop, ".float-menu", closeFloat);
 
 // エディタ
 document.getElementById("cancelMemoBtn").onclick  = closeEditor;
 document.getElementById("saveMemoBtn").onclick    = saveEditor;
-document.getElementById("memoBodyInput").addEventListener("pointerdown", () => {
-  selectingMemoBody = true;
-});
-window.addEventListener("pointerup", () => {
-  if (!selectingMemoBody) return;
-  selectingMemoBody = false;
-  const bodyInput = document.getElementById("memoBodyInput");
-  if (bodyInput.selectionStart !== bodyInput.selectionEnd) {
-    skipNextEditorBackdropClose = true;
-    setTimeout(() => { skipNextEditorBackdropClose = false; }, 250);
-  }
-}, true);
-document.getElementById("memoEditorModal").onclick = (e) => {
-  if (e.target.id !== "memoEditorModal") return;
-  if (skipNextEditorBackdropClose) {
-    skipNextEditorBackdropClose = false;
-    return;
-  }
-  closeEditor();
-};
+setupSafeBackdropClose(
+  document.getElementById("memoEditorModal"),
+  ".editor-card",
+  closeEditor
+);
 
 // カテゴリ名入力モーダル
 document.getElementById("cancelCatBtn").onclick = closeCatNameModal;
@@ -1137,26 +1261,11 @@ document.getElementById("catNameInput").addEventListener("keydown", (e) => {
   if (e.key === "Enter") saveCatName();
   if (e.key === "Escape") closeCatNameModal();
 });
-document.getElementById("catNameInput").addEventListener("pointerdown", () => {
-  selectingCatNameInput = true;
-});
-window.addEventListener("pointerup", () => {
-  if (!selectingCatNameInput) return;
-  selectingCatNameInput = false;
-  const catNameInput = document.getElementById("catNameInput");
-  if (catNameInput.selectionStart !== catNameInput.selectionEnd) {
-    skipNextCatNameBackdropClose = true;
-    setTimeout(() => { skipNextCatNameBackdropClose = false; }, 250);
-  }
-}, true);
-document.getElementById("catNameModal").onclick = (e) => {
-  if (e.target.id !== "catNameModal") return;
-  if (skipNextCatNameBackdropClose) {
-    skipNextCatNameBackdropClose = false;
-    return;
-  }
-  closeCatNameModal();
-};
+setupSafeBackdropClose(
+  document.getElementById("catNameModal"),
+  ".editor-card",
+  closeCatNameModal
+);
 
 // カテゴリモーダル
 document.getElementById("menuBtn").onclick        = openModal;
@@ -1183,9 +1292,11 @@ categorySelectToggleBtn.onclick = () => {
   renderCategoryModal();
 };
 categoryDeleteSelectedBtn.onclick = deleteSelectedCats;
-document.getElementById("categoryModal").onclick  = (e) => {
-  if (e.target.id === "categoryModal") closeModal();
-};
+setupSafeBackdropClose(
+  document.getElementById("categoryModal"),
+  ".modal-card",
+  closeModal
+);
 
 // 検索
 document.getElementById("searchBtn").onclick = () => {
@@ -1278,9 +1389,11 @@ document.getElementById("backupBtn").onclick          = openBackupModal;
 document.getElementById("cancelBackupBtn").onclick    = closeBackupModal;
 document.getElementById("backupLocalBtn").onclick     = () => { Backup.saveCustomPath(); };
 document.getElementById("backupGdriveBtn").onclick    = Backup.saveGdrive;
-document.getElementById("backupModal").onclick        = (e) => {
-  if (e.target.id === "backupModal") closeBackupModal();
-};
+setupSafeBackdropClose(
+  document.getElementById("backupModal"),
+  ".editor-card",
+  closeBackupModal
+);
 
 // 復元
 document.getElementById("restoreBtn").onclick    = () => document.getElementById("restoreInput").click();
@@ -1314,8 +1427,48 @@ if ("serviceWorker" in navigator) {
 // ─────────────────────────────────────────────
 //  起動
 // ─────────────────────────────────────────────
-render();
-setupSwipe();
-setupResizeHandler();
-setTimeout(scrollActiveTabIntoView, 100);
+async function initializeApp() {
+  try {
+    const localFile = await LocalFileStore.load();
+    if (localFile.available && localFile.exists) {
+      const loaded = normalizeData(localFile.data);
+      if (!loaded) throw new Error("invalid local data file");
+      data = loaded;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      LocalFileStore.remember(data);
+      setStorageStatus("✅ ローカルファイルから読み込みました", {
+        type: "success"
+      });
+    } else if (localFile.available) {
+      setStorageStatus("💾 ブラウザデータをローカルファイルへ移行中...", {
+        type: "saving",
+        duration: 8000
+      });
+    } else {
+      setStorageStatus(
+        "⚠ ブラウザ保存のみ",
+        {
+          type: "warning",
+          persistent: true,
+          compact: true,
+          details: "⚠️ ブラウザ内保存モードです。データは他のブラウザと共有されません。通常は start_tabmemo.bat から起動してください。"
+        }
+      );
+    }
+  } catch (error) {
+    LocalFileStore.available = false;
+    console.warn("Tab Memo: local file load error", error);
+    setStorageStatus("⚠️ ローカルファイルを読み込めません。ブラウザ内のデータを使用しています。", {
+      type: "error",
+      persistent: true
+    });
+  }
+
+  render();
+  setupSwipe();
+  setupResizeHandler();
+  setTimeout(scrollActiveTabIntoView, 100);
+}
+
+initializeApp();
 
