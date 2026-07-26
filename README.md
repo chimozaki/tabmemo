@@ -24,9 +24,41 @@ Tab Memo は、カテゴリタブでメモを切り替えて管理できる PWA 
 - 📶 Service Worker によるオフライン対応
 
 ### 使い方
-1. `start_tabmemo.bat` をダブルクリック
-2. 自動で開く `http://localhost:4174/` を使用
-3. 以前 `index.html` を直接使っていた場合、初回だけJSONバックアップを「復元」します
+#### 1. Node.jsを準備する（初回だけ）
+
+1. まず `start_tabmemo.bat` をダブルクリックしてください。Tab Memoが開けば、Node.jsは導入済みなので次の「2. Tab Memoを起動する」へ進めます。
+2. 黒い画面に「Node.js is not installed...」と表示された場合は、[Node.js公式ダウンロードページ](https://nodejs.org/en/download)を開きます。
+3. **LTS（長期サポート版）**を選び、Windows用のインストーラー（`.msi`）をダウンロードします。「Current」ではなく「LTS」を選べば大丈夫です。
+4. ダウンロードした `.msi` ファイルをダブルクリックします。
+5. インストーラーは、特に変更せず `Next` → 利用規約に同意 → `Next` → `Install` → `Finish` の順に進めます。
+6. 開いている黒い画面を閉じ、もう一度 `start_tabmemo.bat` をダブルクリックします。それでも認識されない場合は、Windowsを再起動してから再度お試しください。
+
+確認したい場合は、スタートメニューで「コマンドプロンプト」を開き、次を入力します。
+
+```text
+node -v
+```
+
+`v24...` のように `v` から始まる番号が表示されれば準備完了です。バージョン番号は例と違っていても問題ありません。Tab Memoでは `npm install` などの追加操作は不要です。
+
+#### 2. Tab Memoを起動する
+
+1. GitHubからZIPをダウンロードした場合は、ZIPを右クリックして「すべて展開」します。ZIPの中から直接起動しないでください。
+2. 展開したTab Memoフォルダを開きます。
+3. `start_tabmemo.bat` をダブルクリックします。
+4. 黒いサーバー画面と、ブラウザの `http://localhost:4174/` が自動で開きます。
+5. Tab Memoの使用中は黒いサーバー画面を閉じないでください。閉じるとローカルJSONへの保存が止まります。
+6. 以前 `index.html` を直接使っていた場合は、初回だけ以前のJSONバックアップを「復元」します。
+
+> [!TIP]
+> 次回からも `index.html` やブラウザのお気に入りだけで起動せず、先に `start_tabmemo.bat` をダブルクリックしてください。Node.jsの導入に料金やユーザー登録は必要ありません。
+
+#### 起動できないとき
+
+- 「`node` が見つからない」などと表示される: Windowsを再起動してください。直らなければNode.jsのLTS版を再インストールします。
+- BATを押してもブラウザが開かない: 残っている「TabMemo Local Server」という黒い画面を閉じてから、BATをもう一度実行します。
+- 黒い画面がすぐ閉じる: `start_tabmemo.bat` と `server.js` が同じフォルダにあるか確認します。ZIP内のファイルをすべて一緒に展開してください。
+- 急いでメモを確認したい: `index.html` の直接起動もできますが、その場合のデータは開いたブラウザ内だけに保存されます。
 
 ### データ保存
 - 本データ: `data/tabmemo-data.json`
@@ -81,9 +113,40 @@ It is designed to work offline.
 - 📶 Offline support via Service Worker
 
 ### Quick Start
-1. Double-click `start_tabmemo.bat`
-2. Use the automatically opened `http://localhost:4174/`
-3. If you previously opened `index.html` directly, restore your JSON backup once
+#### 1. Install Node.js (first time only)
+
+1. First, double-click `start_tabmemo.bat`. If Tab Memo opens, Node.js is already installed; continue to step 2 below.
+2. If the black window says “Node.js is not installed...”, open the [official Node.js download page](https://nodejs.org/en/download).
+3. Choose the **LTS (Long-Term Support)** release and download the Windows installer (`.msi`). Choose “LTS,” not “Current.”
+4. Run the downloaded `.msi` file and proceed with the default options: `Next` → accept the license → `Next` → `Install` → `Finish`.
+5. Close the black window and double-click `start_tabmemo.bat` again. If Node.js is still not detected, restart Windows and try again.
+
+To verify the installation, open Command Prompt from the Start menu and enter:
+
+```text
+node -v
+```
+
+If a number beginning with `v` appears, Node.js is ready. No `npm install` or other package installation is required.
+
+#### 2. Start Tab Memo
+
+1. If you downloaded a ZIP from GitHub, right-click it and select “Extract All.” Do not run Tab Memo from inside the ZIP.
+2. Open the extracted Tab Memo folder.
+3. Double-click `start_tabmemo.bat`.
+4. A server window and `http://localhost:4174/` will open automatically.
+5. Keep the server window open while using Tab Memo; closing it stops local JSON storage.
+6. If you previously used `index.html` directly, restore your previous JSON backup once.
+
+> [!TIP]
+> Always start with `start_tabmemo.bat`, even if you bookmarked the browser page. Node.js is free and does not require an account.
+
+#### Troubleshooting
+
+- “`node` was not found”: Restart Windows. If that does not help, reinstall the Node.js LTS release.
+- The browser does not open: Close any remaining “TabMemo Local Server” windows and run the BAT again.
+- The black window closes immediately: Confirm that `start_tabmemo.bat` and `server.js` are in the same fully extracted folder.
+- Need quick access: You can open `index.html` directly, but its data is stored only in that browser.
 
 ### Data Storage
 - Primary data: `data/tabmemo-data.json`
@@ -137,9 +200,34 @@ Tab Memo 是一款可用分類分頁管理備忘錄的 PWA。
 - 📶 透過 Service Worker 支援離線使用
 
 ### 快速開始
-1. 雙擊 `start_tabmemo.bat`
-2. 使用自動開啟的 `http://localhost:4174/`
-3. 首次使用時，請從既有備份還原資料
+#### 1. 安裝Node.js（只需首次操作）
+
+1. 先雙擊 `start_tabmemo.bat`。如果Tab Memo正常開啟，表示已安裝Node.js，可直接進入下一節。
+2. 如果黑色視窗顯示「Node.js is not installed...」，請開啟[Node.js官方下載頁面](https://nodejs.org/en/download)。
+3. 選擇 **LTS（長期支援版）**，下載Windows安裝程式（`.msi`）。請選擇「LTS」，不要選擇「Current」。
+4. 執行下載的 `.msi`，使用預設選項依序按下 `Next`、同意授權條款、`Next`、`Install`、`Finish`。
+5. 關閉黑色視窗，再次雙擊 `start_tabmemo.bat`。如果仍無法辨識Node.js，請重新啟動Windows後再試。
+
+如需確認，請從開始功能表開啟「命令提示字元」，輸入 `node -v`。顯示以 `v` 開頭的版本號即表示安裝完成。不需要執行 `npm install`。
+
+#### 2. 啟動Tab Memo
+
+1. 如果從GitHub下載ZIP，請右鍵選擇「全部解壓縮」，不要直接從ZIP內執行。
+2. 開啟解壓縮後的Tab Memo資料夾。
+3. 雙擊 `start_tabmemo.bat`。
+4. 黑色伺服器視窗與 `http://localhost:4174/` 會自動開啟。
+5. 使用Tab Memo期間請勿關閉黑色視窗，否則本機JSON儲存會停止。
+6. 以前若直接使用 `index.html`，首次請從原有JSON備份還原資料。
+
+> [!TIP]
+> 之後也請先執行 `start_tabmemo.bat`，不要只使用瀏覽器書籤。Node.js免費且不需要註冊帳號。
+
+#### 無法啟動時
+
+- 找不到「`node`」：重新啟動Windows；若仍無法使用，請重新安裝Node.js LTS版。
+- 瀏覽器未開啟：關閉殘留的「TabMemo Local Server」黑色視窗，再次執行BAT。
+- 黑色視窗立即關閉：確認 `start_tabmemo.bat` 與 `server.js` 位於同一個已完整解壓縮的資料夾。
+- 急需查看備忘錄：可直接開啟 `index.html`，但資料只會儲存在該瀏覽器中。
 
 ### 資料儲存
 - 主要資料: `data/tabmemo-data.json`
@@ -192,9 +280,34 @@ Está diseñada para funcionar también sin conexión.
 - 📶 Soporte offline mediante Service Worker
 
 ### Inicio rápido
-1. Haz doble clic en `start_tabmemo.bat`
-2. Usa `http://localhost:4174/`, que se abrirá automáticamente
-3. La primera vez, restaura los datos desde tu copia de seguridad
+#### 1. Instalar Node.js (solo la primera vez)
+
+1. Primero, haz doble clic en `start_tabmemo.bat`. Si Tab Memo se abre, Node.js ya está instalado; continúa con la siguiente sección.
+2. Si la ventana negra indica “Node.js is not installed...”, abre la [página oficial de descarga de Node.js](https://nodejs.org/en/download).
+3. Elige la versión **LTS (soporte a largo plazo)** y descarga el instalador de Windows (`.msi`). Elige “LTS”, no “Current”.
+4. Ejecuta el archivo `.msi` y conserva las opciones predeterminadas: `Next` → aceptar la licencia → `Next` → `Install` → `Finish`.
+5. Cierra la ventana negra y vuelve a ejecutar `start_tabmemo.bat`. Si Node.js sigue sin detectarse, reinicia Windows e inténtalo otra vez.
+
+Para comprobarlo, abre el Símbolo del sistema desde Inicio y escribe `node -v`. Si aparece un número que empieza por `v`, la instalación está lista. No necesitas ejecutar `npm install`.
+
+#### 2. Iniciar Tab Memo
+
+1. Si descargaste un ZIP desde GitHub, haz clic derecho y selecciona “Extraer todo”. No lo ejecutes dentro del ZIP.
+2. Abre la carpeta extraída de Tab Memo.
+3. Haz doble clic en `start_tabmemo.bat`.
+4. Se abrirán automáticamente una ventana negra del servidor y `http://localhost:4174/`.
+5. Mantén abierta la ventana del servidor mientras uses Tab Memo; si la cierras, se detendrá el almacenamiento JSON local.
+6. Si antes usabas `index.html` directamente, restaura una vez tu copia de seguridad JSON anterior.
+
+> [!TIP]
+> Inicia siempre con `start_tabmemo.bat`, aunque hayas guardado la página en favoritos. Node.js es gratuito y no requiere una cuenta.
+
+#### Solución de problemas
+
+- No se encuentra “`node`”: Reinicia Windows. Si no se soluciona, reinstala la versión LTS de Node.js.
+- El navegador no se abre: Cierra las ventanas “TabMemo Local Server” que queden abiertas y ejecuta de nuevo el BAT.
+- La ventana negra se cierra inmediatamente: Comprueba que `start_tabmemo.bat` y `server.js` estén juntos en la carpeta completamente extraída.
+- Acceso rápido: Puedes abrir `index.html` directamente, pero sus datos solo se guardarán en ese navegador.
 
 ### Almacenamiento
 - Datos principales: `data/tabmemo-data.json`
