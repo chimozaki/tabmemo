@@ -1,5 +1,5 @@
 /* =============================================
-   Tab Memo ver1.4.0 stylesheet
+   Tab Memo ver1.4.1 stylesheet
    ============================================= */
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -1412,6 +1412,16 @@ body.dark .toast.error {
   margin: -6px 0 16px;
   font-size: 14px;
   color: var(--sub);
+}
+.backup-last-time {
+  margin: -7px 0 14px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--surface-soft) 88%, var(--surface));
+  color: var(--sub);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
 }
 .backup-options {
   display: flex;

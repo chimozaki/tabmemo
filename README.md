@@ -6,13 +6,14 @@
 
 ### 概要
 Tab Memo は、カテゴリタブでメモを切り替えて管理できる PWA です。  
+インストール不要の[Web版（GitHub Pages）](https://chimozaki.github.io/tabmemo/)をすぐに利用できます。
 `start_tabmemo.bat` から起動すると、ブラウザに依存しないローカルJSONへ自動保存します。  
 `index.html` を直接開く従来方式も利用できます。  
 オフラインでも使える設計です。
 
 > [!IMPORTANT]
-> ver1.3.0から、通常利用では **`start_tabmemo.bat` から起動してください**。
-> 起動にはNode.jsが必要です。`index.html` を直接開いた場合、データはブラウザ内だけに保存され、別ブラウザとは共有されません。
+> **Web版**はNode.js不要で、データを利用中のブラウザ内に保存します。
+> **ローカルJSON版**は `start_tabmemo.bat` から起動し、Node.jsを使用します。同じPCの別ブラウザでもデータを共有できます。
 
 ### 主な機能
 - 📂 カテゴリタブ切り替え（横スクロール・スワイプ対応）
@@ -26,8 +27,18 @@ Tab Memo は、カテゴリタブでメモを切り替えて管理できる PWA 
 - 💾 JSON バックアップ・復元
 - 📶 Service Worker によるオフライン対応
 - 📱 320px幅から使えるモバイルレイアウト
+- 🌐 GitHub Pagesで利用できるインストール不要のWeb版
+- 🕘 バックアップ画面に最終バックアップ日時を表示
 
 ### 使い方
+#### Web版を使う
+
+1. [TabMemo Web版](https://chimozaki.github.io/tabmemo/)を開きます。
+2. 作成したデータはそのブラウザ内へ自動保存されます。
+3. 必要に応じて「💾バックアップ」からJSONを書き出してください。
+
+PC内のJSONファイルへ保存したい場合や、複数のブラウザで同じデータを使いたい場合は、以下のローカルJSON版を利用します。
+
 #### 1. Node.jsを準備する（初回だけ）
 
 1. まず `start_tabmemo.bat` をダブルクリックしてください。Tab Memoが開けば、Node.jsは導入済みなので次の「2. Tab Memoを起動する」へ進めます。
@@ -70,6 +81,7 @@ node -v
 - ブラウザキャッシュ: `localStorage`（キー: `tabMemoPwa_v2_0`）
 - 別ブラウザでも、同じBATから起動すれば共通のローカルJSONを読み込みます
 - `index.html` を直接開いた場合はブラウザ保存のみで動作します
+- GitHub Pages版もブラウザ保存で動作し、Node.jsは不要です
 - ゴミ箱の内容も通常データ・JSONバックアップに含まれます
 
 ### ファイル構成
@@ -84,7 +96,7 @@ node -v
 - `icon.svg` / `icon-maskable.svg` : アイコン
 
 ### リリース状態
-現在の正式版は **ver1.4.0** です。
+現在の正式版は **ver1.4.1** です。
 
 ## ☕ Support
 
@@ -100,13 +112,14 @@ node -v
 
 ### Overview
 Tab Memo is a PWA that lets you organize memos with category tabs.  
+You can immediately use the installation-free [web version on GitHub Pages](https://chimozaki.github.io/tabmemo/).
 Launch with `start_tabmemo.bat` to automatically save to a browser-independent local JSON file.  
 Direct `index.html` use remains available as a browser-storage fallback.  
 It is designed to work offline.
 
 > [!IMPORTANT]
-> Starting with ver1.3.0, use **`start_tabmemo.bat` for normal operation**.
-> Node.js is required. Opening `index.html` directly stores data only in that browser and does not share it with other browsers.
+> The **web version** requires no Node.js and stores data in the current browser.
+> The **local JSON version** starts with `start_tabmemo.bat`, uses Node.js, and can share data between browsers on the same PC.
 
 ### Features
 - 📂 Category tabs (horizontal scroll + swipe support)
@@ -120,8 +133,18 @@ It is designed to work offline.
 - 💾 JSON backup and restore
 - 📶 Offline support via Service Worker
 - 📱 Mobile layout supported from 320px width
+- 🌐 Installation-free web version on GitHub Pages
+- 🕘 Last backup time shown in the backup dialog
 
 ### Quick Start
+#### Use the web version
+
+1. Open [TabMemo Web](https://chimozaki.github.io/tabmemo/).
+2. Your data is saved automatically in that browser.
+3. Export a JSON file from “💾 Backup” whenever you need a portable copy.
+
+Use the local JSON version below when you want a file stored on your PC or shared data across browsers.
+
 #### 1. Install Node.js (first time only)
 
 1. First, double-click `start_tabmemo.bat`. If Tab Memo opens, Node.js is already installed; continue to step 2 below.
@@ -163,6 +186,7 @@ If a number beginning with `v` appears, Node.js is ready. No `npm install` or ot
 - Browser cache: `localStorage` (key: `tabMemoPwa_v2_0`)
 - Browsers share the same local JSON when launched through the BAT file
 - Direct `index.html` use falls back to browser-only storage
+- The GitHub Pages version also uses browser storage and requires no Node.js
 - Trash contents are included in normal storage and JSON backups
 
 ### Project Files
@@ -177,7 +201,7 @@ If a number beginning with `v` appears, Node.js is ready. No `npm install` or ot
 - `icon.svg` / `icon-maskable.svg` : Icons
 
 ### Release Status
-Current stable release is **ver1.4.0**.
+Current stable release is **ver1.4.1**.
 
 ## ☕ Support
 
@@ -192,13 +216,14 @@ Thank you for your support!
 
 ### 概要
 Tab Memo 是一款可用分類分頁管理備忘錄的 PWA。  
+可立即使用免安裝的 [GitHub Pages 網頁版](https://chimozaki.github.io/tabmemo/)。
 使用 `start_tabmemo.bat` 啟動時，資料會自動儲存到不依賴瀏覽器的本機 JSON。  
 仍可直接開啟 `index.html`，此時會使用瀏覽器儲存空間。  
 以離線可用為設計核心。
 
 > [!IMPORTANT]
-> 從ver1.3.0開始，正常使用時請透過 **`start_tabmemo.bat` 啟動**。
-> 需要安裝Node.js。直接開啟 `index.html` 時，資料只會儲存在該瀏覽器中，無法與其他瀏覽器共用。
+> **網頁版**不需要Node.js，資料會儲存在目前使用的瀏覽器中。
+> **本機JSON版**使用 `start_tabmemo.bat` 與Node.js，可在同一台PC的不同瀏覽器間共用資料。
 
 ### 主要功能
 - 📂 分類分頁切換（支援橫向捲動與滑動）
@@ -212,8 +237,18 @@ Tab Memo 是一款可用分類分頁管理備忘錄的 PWA。
 - 💾 JSON 備份與還原
 - 📶 透過 Service Worker 支援離線使用
 - 📱 支援最小320px寬度的行動版介面
+- 🌐 可於GitHub Pages使用的免安裝網頁版
+- 🕘 在備份視窗顯示上次備份時間
 
 ### 快速開始
+#### 使用網頁版
+
+1. 開啟 [TabMemo網頁版](https://chimozaki.github.io/tabmemo/)。
+2. 資料會自動儲存在該瀏覽器中。
+3. 需要可攜式副本時，請從「💾備份」匯出JSON。
+
+若要將JSON檔案儲存在PC上，或在不同瀏覽器間共用資料，請使用下方的本機JSON版。
+
 #### 1. 安裝Node.js（只需首次操作）
 
 1. 先雙擊 `start_tabmemo.bat`。如果Tab Memo正常開啟，表示已安裝Node.js，可直接進入下一節。
@@ -248,6 +283,7 @@ Tab Memo 是一款可用分類分頁管理備忘錄的 PWA。
 - 上一版本: `data/tabmemo-data.previous.json`
 - 瀏覽器快取: `localStorage`（金鑰: `tabMemoPwa_v2_0`）
 - 透過 BAT 啟動時，不同瀏覽器會共用同一個本機 JSON
+- GitHub Pages版使用瀏覽器儲存，不需要Node.js
 - 垃圾桶內容也包含在一般儲存與JSON備份中
 
 ### 檔案結構
@@ -262,7 +298,7 @@ Tab Memo 是一款可用分類分頁管理備忘錄的 PWA。
 - `icon.svg` / `icon-maskable.svg` : 圖示
 
 ### 發行狀態
-目前正式版本為 **ver1.4.0**。
+目前正式版本為 **ver1.4.1**。
 
 ## ☕ Support
 
@@ -277,13 +313,14 @@ Tab Memo 是一款可用分類分頁管理備忘錄的 PWA。
 
 ### Resumen
 Tab Memo es una PWA para organizar notas con pestañas por categoría.  
+Puedes usar inmediatamente la [versión web en GitHub Pages](https://chimozaki.github.io/tabmemo/) sin instalar nada.
 Al iniciarla con `start_tabmemo.bat`, los datos se guardan automáticamente en un JSON local independiente del navegador.  
 También se puede abrir `index.html` directamente usando el almacenamiento del navegador.  
 Está diseñada para funcionar también sin conexión.
 
 > [!IMPORTANT]
-> A partir de la versión 1.3.0, usa **`start_tabmemo.bat` para el funcionamiento normal**.
-> Se requiere Node.js. Si abres `index.html` directamente, los datos solo se guardarán en ese navegador y no se compartirán con otros.
+> La **versión web** no requiere Node.js y guarda los datos en el navegador actual.
+> La **versión JSON local** se inicia con `start_tabmemo.bat`, usa Node.js y permite compartir datos entre navegadores del mismo PC.
 
 ### Funciones
 - 📂 Pestañas por categoría (scroll horizontal y deslizamiento)
@@ -297,8 +334,18 @@ Está diseñada para funcionar también sin conexión.
 - 💾 Respaldo y restauración en JSON
 - 📶 Soporte offline mediante Service Worker
 - 📱 Diseño móvil compatible desde 320px de ancho
+- 🌐 Versión web sin instalación en GitHub Pages
+- 🕘 Fecha y hora del último respaldo en el diálogo de respaldo
 
 ### Inicio rápido
+#### Usar la versión web
+
+1. Abre [TabMemo Web](https://chimozaki.github.io/tabmemo/).
+2. Los datos se guardan automáticamente en ese navegador.
+3. Exporta un JSON desde «💾 Respaldo» cuando necesites una copia portátil.
+
+Usa la versión JSON local que aparece a continuación si quieres guardar un archivo en el PC o compartir datos entre navegadores.
+
 #### 1. Instalar Node.js (solo la primera vez)
 
 1. Primero, haz doble clic en `start_tabmemo.bat`. Si Tab Memo se abre, Node.js ya está instalado; continúa con la siguiente sección.
@@ -333,6 +380,7 @@ Para comprobarlo, abre el Símbolo del sistema desde Inicio y escribe `node -v`.
 - Versión anterior: `data/tabmemo-data.previous.json`
 - Caché del navegador: `localStorage` (clave: `tabMemoPwa_v2_0`)
 - Los navegadores comparten el mismo JSON local al iniciar mediante el BAT
+- La versión de GitHub Pages usa almacenamiento del navegador y no requiere Node.js
 - El contenido de la papelera se incluye en el almacenamiento normal y en los respaldos JSON
 
 ### Estructura del proyecto
@@ -347,7 +395,7 @@ Para comprobarlo, abre el Símbolo del sistema desde Inicio y escribe `node -v`.
 - `icon.svg` / `icon-maskable.svg` : Iconos
 
 ### Estado de lanzamiento
-La versión estable actual es **ver1.4.0**.
+La versión estable actual es **ver1.4.1**.
 
 ## ☕ Support
 

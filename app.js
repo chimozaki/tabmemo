@@ -1,6 +1,6 @@
 // =============================================
-//  Tab Memo 1.4.0
-//  ゴミ箱・未保存保護・モバイルUI改善
+//  Tab Memo 1.4.1
+//  GitHub Pages公開・最終バックアップ日時表示
 //
 //  主な変更:
 //  - カテゴリ一覧からメモ編集→保存/キャンセルでモーダルに戻る
@@ -197,7 +197,8 @@ function normalizeData(d) {
 
   if (typeof d.active !== "number" || d.active < 0 || d.active >= d.cats.length) d.active = 0;
   if (typeof d.dark !== "boolean") d.dark = false;
-  d.version = "1.4.0";
+  if (typeof d.lastBackupAt !== "string") d.lastBackupAt = null;
+  d.version = "1.4.1";
   return d;
 }
 
@@ -223,7 +224,7 @@ function load() {
   } catch (e) {
     console.warn("Tab Memo: load error", e);
   }
-  return { version: "1.4.0", cats: ["メモ"], active: 0, memos: [[]], trash: [], dark: false };
+  return { version: "1.4.1", cats: ["メモ"], active: 0, memos: [[]], trash: [], lastBackupAt: null, dark: false };
 }
 
 // ─────────────────────────────────────────────
@@ -1164,6 +1165,7 @@ function render({ persist = true } = {}) {
   applyTheme();
   syncMemoModeButtons();
   updateTrashCount();
+  updateBackupStatus();
   renderTabs();
   renderMemos();
   if (persist) save();
@@ -1593,8 +1595,9 @@ window.addEventListener("beforeunload", (e) => {
 
 const Backup = {
   /** バックアップJSONのBlobを生成 */
-  makeBlob() {
-    return new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  makeBlob(backupAt = data.lastBackupAt) {
+    const snapshot = { ...data, lastBackupAt: backupAt };
+    return new Blob([JSON.stringify(snapshot, null, 2)], { type: "application/json" });
   },
 
   /** ファイル名を生成 */
@@ -1606,10 +1609,12 @@ const Backup = {
   /** 端末にダウンロード保存 */
   saveLocal() {
     const a  = document.createElement("a");
-    a.href   = URL.createObjectURL(Backup.makeBlob());
+    const backupAt = new Date().toISOString();
+    a.href   = URL.createObjectURL(Backup.makeBlob(backupAt));
     a.download = Backup.makeFilename();
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    recordBackupCompleted(backupAt);
     closeBackupModal();
   },
 
@@ -1635,9 +1640,11 @@ const Backup = {
         suggestedName: Backup.makeFilename(),
         types: [{ description: "JSON", accept: { "application/json": [".json"] } }]
       });
+      const backupAt = new Date().toISOString();
       const writable = await handle.createWritable();
-      await writable.write(Backup.makeBlob());
+      await writable.write(Backup.makeBlob(backupAt));
       await writable.close();
+      recordBackupCompleted(backupAt);
       closeBackupModal();
     } catch (e) {
       if (e.name !== "AbortError") alert("保存に失敗しました。");
@@ -1645,7 +1652,30 @@ const Backup = {
   }
 };
 
-function openBackupModal()  { document.getElementById("backupModal").classList.remove("hidden"); }
+function formatBackupTime(value) {
+  if (!value) return "まだありません";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "まだありません" : date.toLocaleString();
+}
+
+function updateBackupStatus() {
+  const label = `最終バックアップ: ${formatBackupTime(data.lastBackupAt)}`;
+  const statusEl = document.getElementById("lastBackupAt");
+  const buttonEl = document.getElementById("backupBtn");
+  if (statusEl) statusEl.textContent = label;
+  if (buttonEl) buttonEl.title = label;
+}
+
+function recordBackupCompleted(backupAt = new Date().toISOString()) {
+  data.lastBackupAt = backupAt;
+  save();
+  updateBackupStatus();
+}
+
+function openBackupModal()  {
+  updateBackupStatus();
+  document.getElementById("backupModal").classList.remove("hidden");
+}
 function closeBackupModal() { document.getElementById("backupModal").classList.add("hidden"); }
 
 // バックアップ

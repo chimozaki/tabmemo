@@ -1,3 +1,47 @@
+# 🎉 Tab Memo ver1.4.1 Release Notes
+
+## ✨ 概要 / Overview
+
+Tab Memo ver1.4.1 は、GitHub Pages版の正式公開とバックアップ状況の分かりやすさを改善するパッチアップデートです。
+Tab Memo ver1.4.1 officially publishes the GitHub Pages edition and improves backup-status visibility.
+
+---
+
+## ✅ 追加・改善内容 / Updates
+
+- 🌐 [GitHub Pages版](https://chimozaki.github.io/tabmemo/)を正式公開 / Officially published the [GitHub Pages edition](https://chimozaki.github.io/tabmemo/)
+- 🚀 Web版はNode.jsやインストール不要で利用可能 / Use the web edition without Node.js or installation
+- 🕘 バックアップ画面に最終バックアップ日時を表示 / Show the last backup time in the backup dialog
+- 💾 ダウンロード保存と保存先指定の完了時にバックアップ日時を記録 / Record the backup time after download or file-picker saves
+- 📖 READMEでWeb版とローカルJSON版の使い分けを4言語で説明 / Document the web and local JSON editions in four README languages
+- 🖼 READMEの起動画面を現行バージョンへ更新 / Update the README screenshot to the current version
+
+---
+
+## 🔄 データ互換性 / Data Compatibility
+
+- 既存データには `lastBackupAt` が自動追加されます / Existing data automatically receives the `lastBackupAt` field
+- `lastBackupAt` がない旧バックアップもそのまま復元できます / Older backups without `lastBackupAt` can still be restored
+- 保存キー `tabMemoPwa_v2_0` は変更していません / The storage key `tabMemoPwa_v2_0` remains unchanged
+
+---
+
+## 🛠 技術情報 / Technical Notes
+
+- アプリ内・manifest・Service Workerを `ver1.4.1` に更新 / Updated the app, manifest, and Service Worker to `ver1.4.1`
+- Service Workerキャッシュ名を `tab-memo-v1-4-1` に更新 / Updated the Service Worker cache name to `tab-memo-v1-4-1`
+- GitHub Pagesは `main` ブランチ直下からHTTPS配信 / GitHub Pages serves the root of the `main` branch over HTTPS
+
+---
+
+## ⚠️ 保存方式について / Storage Modes
+
+- GitHub Pages版は利用中のブラウザ内に保存されます / The GitHub Pages edition stores data in the current browser
+- PC内JSONとブラウザ間共有が必要な場合は `start_tabmemo.bat` を使用してください / Use `start_tabmemo.bat` for PC-local JSON and cross-browser sharing
+- どちらの方式でもJSONバックアップと復元を利用できます / JSON backup and restore are available in both editions
+
+---
+
 # 🎉 Tab Memo ver1.4.0 Release Notes
 
 ## ✨ 機能追加 / New Features
