@@ -1,6 +1,6 @@
 // =============================================
-//  Tab Memo 1.3.0
-//  正式版リリース: 機能安定化とUI最適化
+//  Tab Memo 1.4.0
+//  ゴミ箱・未保存保護・モバイルUI改善
 //
 //  主な変更:
 //  - カテゴリ一覧からメモ編集→保存/キャンセルでモーダルに戻る
@@ -31,6 +31,10 @@ const LocalFileStore = {
     }
 
     const response = await fetch(LOCAL_DATA_API, { cache: "no-store" });
+    // 静的ホスティングでは保存APIが存在しないため、ブラウザ保存へ静かに切り替える。
+    if (response.status === 404) {
+      return { available: false, exists: false, data: null };
+    }
     if (!response.ok) throw new Error(`local data load failed: ${response.status}`);
 
     const result = await response.json();
@@ -52,10 +56,6 @@ const LocalFileStore = {
     const payload = JSON.stringify(snapshot);
     if (payload === this.lastPayload) return;
     this.lastPayload = payload;
-    setStorageStatus("💾 ローカルファイルへ保存中...", {
-      type: "saving",
-      duration: 8000
-    });
 
     this.saveChain = this.saveChain
       .catch(() => {})
@@ -66,9 +66,6 @@ const LocalFileStore = {
           body: payload
         });
         if (!response.ok) throw new Error(`local data save failed: ${response.status}`);
-        setStorageStatus("✅ ローカルファイルへ保存しました", {
-          type: "success"
-        });
       })
       .catch((error) => {
         this.lastPayload = null;
@@ -101,24 +98,35 @@ let memoSelectMode = false;
 let memoReorderMode = false;
 let selectedMemoIndexes = new Set();
 let memoSwapFromIdx = null;
+let editorInitialValue = { title: "", text: "" };
 
 /**
  * 「削除しますか？」の軽量バーでネイティブ confirm を代替する。
  */
-function confirmDelete(cb) {
+function confirmDelete(cb, {
+  message = "本当に削除しますか？",
+  confirmLabel = "削除する",
+  onSave = null,
+  saveLabel = "保存して閉じる"
+} = {}) {
   if (confirmDeleteBusy) return;
   confirmDeleteBusy = true;
 
   const bar    = document.getElementById("confirmBar");
   const btnCx  = document.getElementById("confirmBarCancel");
   const btnDel = document.getElementById("confirmBarDelete");
+  const btnSave = document.getElementById("confirmBarSave");
   const msg    = document.getElementById("confirmBarMessage");
-  msg.textContent = "本当に削除しますか？";
+  msg.textContent = message;
+  btnDel.textContent = confirmLabel;
+  btnSave.textContent = saveLabel;
+  btnSave.classList.toggle("hidden", typeof onSave !== "function");
 
   const cleanup = () => {
     bar.classList.add("hidden");
     btnCx.removeEventListener("click", onCancel);
     btnDel.removeEventListener("click", onConfirm);
+    btnSave.removeEventListener("click", onSaveAndClose);
     document.removeEventListener("keydown", onKeyDown);
     confirmDeleteBusy = false;
   };
@@ -130,6 +138,10 @@ function confirmDelete(cb) {
 
   function onCancel() { finish(false); }
   function onConfirm() { finish(true); }
+  function onSaveAndClose() {
+    cleanup();
+    onSave();
+  }
 
   function onKeyDown(e) {
     if (e.key === "Escape") {
@@ -140,6 +152,7 @@ function confirmDelete(cb) {
 
   btnCx.addEventListener("click", onCancel);
   btnDel.addEventListener("click", onConfirm);
+  if (typeof onSave === "function") btnSave.addEventListener("click", onSaveAndClose);
   document.addEventListener("keydown", onKeyDown);
   bar.classList.remove("hidden");
 }
@@ -175,9 +188,16 @@ function normalizeData(d) {
     })
   );
 
+  if (!Array.isArray(d.trash)) d.trash = [];
+  d.trash = d.trash.filter(item =>
+    item && typeof item === "object"
+    && typeof item.id === "string"
+    && (item.type === "memo" || item.type === "category")
+  );
+
   if (typeof d.active !== "number" || d.active < 0 || d.active >= d.cats.length) d.active = 0;
   if (typeof d.dark !== "boolean") d.dark = false;
-  d.version = "1.3.0";
+  d.version = "1.4.0";
   return d;
 }
 
@@ -203,7 +223,7 @@ function load() {
   } catch (e) {
     console.warn("Tab Memo: load error", e);
   }
-  return { version: "1.3.0", cats: ["メモ"], active: 0, memos: [[]], dark: false };
+  return { version: "1.4.0", cats: ["メモ"], active: 0, memos: [[]], trash: [], dark: false };
 }
 
 // ─────────────────────────────────────────────
@@ -333,7 +353,7 @@ function renderTabs() {
     t.onclick = () => {
       data.active = i;
       resetMemoModes(true);
-      render();
+      render({ persist: false });
       scrollActiveTabIntoView();
     };
     tabsEl.appendChild(t);
@@ -414,10 +434,11 @@ function renderSearch() {
 function delFromSearch(catIdx, memoIdx) {
   confirmDelete((ok) => {
     if (!ok) return;
-    data.memos[catIdx].splice(memoIdx, 1);
+    trashMemoAt(catIdx, memoIdx);
     save();
     renderSearch();
-  });
+    updateTrashCount();
+  }, { message: "このメモをゴミ箱に移動しますか？", confirmLabel: "移動する" });
 }
 
 async function copyTextToClipboard(text) {
@@ -474,6 +495,185 @@ function showToast(message, isError = false) {
   }, 1200);
 }
 
+// ─────────────────────────────────────────────
+//  ゴミ箱
+// ─────────────────────────────────────────────
+function makeTrashId() {
+  if (globalThis.crypto && typeof globalThis.crypto.randomUUID === "function") {
+    return globalThis.crypto.randomUUID();
+  }
+  return `trash-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function trashMemoAt(catIdx, memoIdx) {
+  const category = data.memos[catIdx];
+  if (!category || memoIdx < 0 || memoIdx >= category.length) return false;
+  const [memo] = category.splice(memoIdx, 1);
+  data.trash.unshift({
+    id: makeTrashId(),
+    type: "memo",
+    deletedAt: new Date().toISOString(),
+    categoryName: data.cats[catIdx] || "メモ",
+    categoryIndex: catIdx,
+    memo
+  });
+  return true;
+}
+
+function makeCategoryTrashItem(catIdx) {
+  return {
+    id: makeTrashId(),
+    type: "category",
+    deletedAt: new Date().toISOString(),
+    categoryIndex: catIdx,
+    category: {
+      name: data.cats[catIdx] || "メモ",
+      memos: data.memos[catIdx] || []
+    }
+  };
+}
+
+function uniqueRestoredCategoryName(name) {
+  const base = String(name || "メモ");
+  if (!data.cats.includes(base)) return base;
+  let suffix = 1;
+  let candidate = `${base} (復元)`;
+  while (data.cats.includes(candidate)) {
+    suffix += 1;
+    candidate = `${base} (復元${suffix})`;
+  }
+  return candidate;
+}
+
+function formatDeletedAt(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "削除日時不明" : `${date.toLocaleString()} に削除`;
+}
+
+function updateTrashCount() {
+  const count = data.trash.length;
+  const countEl = document.getElementById("trashCount");
+  const summaryEl = document.getElementById("trashSummary");
+  if (countEl) countEl.textContent = String(count);
+  if (summaryEl) summaryEl.textContent = count ? `${count}件` : "空です";
+}
+
+function restoreTrashItem(id) {
+  const index = data.trash.findIndex(item => item.id === id);
+  if (index < 0) return;
+  const [item] = data.trash.splice(index, 1);
+
+  if (item.type === "memo" && item.memo) {
+    let targetIndex = data.cats.indexOf(item.categoryName);
+    if (targetIndex < 0) {
+      data.cats.push(uniqueRestoredCategoryName(item.categoryName));
+      data.memos.push([]);
+      targetIndex = data.cats.length - 1;
+    }
+    data.memos[targetIndex].push(item.memo);
+    data.active = targetIndex;
+  } else if (item.type === "category" && item.category) {
+    data.cats.push(uniqueRestoredCategoryName(item.category.name));
+    data.memos.push(Array.isArray(item.category.memos) ? item.category.memos : []);
+    data.active = data.cats.length - 1;
+  }
+
+  resetMemoModes(true);
+  render();
+  renderTrash();
+  showToast("元のデータを復元しました");
+}
+
+function permanentlyDeleteTrashItem(id) {
+  confirmDelete((ok) => {
+    if (!ok) return;
+    data.trash = data.trash.filter(item => item.id !== id);
+    save();
+    renderTrash();
+    updateTrashCount();
+  }, {
+    message: "このデータを完全に削除しますか？元に戻せません。",
+    confirmLabel: "完全に削除"
+  });
+}
+
+function renderTrash() {
+  const list = document.getElementById("trashList");
+  const emptyBtn = document.getElementById("emptyTrashBtn");
+  if (!list || !emptyBtn) return;
+  list.innerHTML = "";
+  updateTrashCount();
+  emptyBtn.disabled = data.trash.length === 0;
+
+  if (data.trash.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "trash-empty-state";
+    empty.textContent = "ゴミ箱は空です";
+    list.appendChild(empty);
+    return;
+  }
+
+  data.trash.forEach(item => {
+    const row = document.createElement("article");
+    row.className = "trash-row";
+
+    const content = document.createElement("div");
+    content.className = "trash-content";
+    const title = document.createElement("strong");
+    const isCategory = item.type === "category";
+    const memoTitle = item.memo ? getDisplayTitle(item.memo) : "";
+    title.textContent = isCategory
+      ? `📁 ${item.category?.name || "カテゴリ"}`
+      : `📝 ${memoTitle || "無題のメモ"}`;
+    const meta = document.createElement("span");
+    const categoryLabel = !isCategory && item.categoryName ? `・${item.categoryName}` : "";
+    const memoCount = isCategory && Array.isArray(item.category?.memos)
+      ? `・メモ${item.category.memos.length}件`
+      : "";
+    meta.textContent = `${isCategory ? "カテゴリ" : "メモ"}${categoryLabel}${memoCount}・${formatDeletedAt(item.deletedAt)}`;
+    content.append(title, meta);
+
+    const actions = document.createElement("div");
+    actions.className = "trash-actions";
+    const restoreBtn = document.createElement("button");
+    restoreBtn.type = "button";
+    restoreBtn.className = "trash-restore-btn";
+    restoreBtn.textContent = "復元";
+    restoreBtn.onclick = () => restoreTrashItem(item.id);
+    const deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "trash-delete-btn";
+    deleteBtn.textContent = "完全削除";
+    deleteBtn.onclick = () => permanentlyDeleteTrashItem(item.id);
+    actions.append(restoreBtn, deleteBtn);
+    row.append(content, actions);
+    list.appendChild(row);
+  });
+}
+
+function openTrash() {
+  closeModal();
+  renderTrash();
+  document.getElementById("trashModal").classList.remove("hidden");
+}
+
+function closeTrash() {
+  document.getElementById("trashModal").classList.add("hidden");
+}
+
+function emptyTrash() {
+  if (data.trash.length === 0) return;
+  confirmDelete((ok) => {
+    if (!ok) return;
+    data.trash = [];
+    save();
+    renderTrash();
+  }, {
+    message: "ゴミ箱を空にしますか？すべて完全に削除されます。",
+    confirmLabel: "空にする"
+  });
+}
+
 function syncMemoModeButtons() {
   memoReorderBtn.classList.toggle("active", memoReorderMode);
   memoSelectBtn.classList.toggle("active", memoSelectMode);
@@ -526,7 +726,7 @@ function pinSelectedMemos() {
   selected.forEach((idx) => {
     if (memos[idx]) memos[idx].pinned = !allPinned;
   });
-  render();
+  render({ persist: false });
 }
 
 function deleteSelectedMemos() {
@@ -535,12 +735,12 @@ function deleteSelectedMemos() {
     if (!ok) return;
     const memos = data.memos[data.active];
     [...selectedMemoIndexes].sort((a, b) => b - a).forEach((idx) => {
-      if (idx >= 0 && idx < memos.length) memos.splice(idx, 1);
+      if (idx >= 0 && idx < memos.length) trashMemoAt(data.active, idx);
     });
     selectedMemoIndexes.clear();
     if (memos.length === 0) memoSelectMode = false;
     render();
-  });
+  }, { message: "選択したメモをゴミ箱に移動しますか？", confirmLabel: "移動する" });
 }
 
 function swapMemo(aIdx, bIdx) {
@@ -907,7 +1107,7 @@ function renderCategoryModal() {
       data.active = i;
       resetMemoModes(true);
       closeModal();
-      render();
+      render({ persist: false });
       scrollActiveTabIntoView();
     };
 
@@ -960,12 +1160,13 @@ function renderCategoryModal() {
 // ─────────────────────────────────────────────
 //  メインrender
 // ─────────────────────────────────────────────
-function render() {
+function render({ persist = true } = {}) {
   applyTheme();
   syncMemoModeButtons();
+  updateTrashCount();
   renderTabs();
   renderMemos();
-  save();
+  if (persist) save();
 }
 
 // ─────────────────────────────────────────────
@@ -983,14 +1184,40 @@ function openEditor(index = null, catIdx = null, backToModal = false) {
   const memo = isEdit ? data.memos[editingCatIdx][index] : { title: "", text: "" };
   document.getElementById("memoTitleInput").value = memo.title || "";
   document.getElementById("memoBodyInput").value  = memo.text  || "";
+  editorInitialValue = {
+    title: document.getElementById("memoTitleInput").value,
+    text: document.getElementById("memoBodyInput").value
+  };
   document.getElementById("memoEditorModal").classList.remove("hidden");
   setTimeout(() => document.getElementById("memoTitleInput").focus(), 50);
 }
 
-function closeEditor() {
+function isMemoEditorOpen() {
+  return !document.getElementById("memoEditorModal").classList.contains("hidden");
+}
+
+function hasUnsavedEditorChanges() {
+  if (!isMemoEditorOpen()) return false;
+  return document.getElementById("memoTitleInput").value !== editorInitialValue.title
+    || document.getElementById("memoBodyInput").value !== editorInitialValue.text;
+}
+
+function closeEditor(force = false) {
+  if (!force && hasUnsavedEditorChanges()) {
+    confirmDelete((ok) => {
+      if (ok) closeEditor(true);
+    }, {
+      message: "未保存の変更があります。どうしますか？",
+      confirmLabel: "保存せず閉じる",
+      onSave: saveEditor
+    });
+    return;
+  }
+
   document.getElementById("memoEditorModal").classList.add("hidden");
   editingIndex  = null;
   editingCatIdx = null;
+  editorInitialValue = { title: "", text: "" };
 
   if (returnToModal) {
     returnToModal = false;
@@ -1010,19 +1237,28 @@ function saveEditor() {
   const now = new Date().toLocaleString();
 
   if (editingIndex === null) {
-    data.memos[data.active].push({ title, text, created: now, updated: null });
+    data.memos[data.active].push({ title, text, created: now, updated: null, pinned: false });
   } else {
     const existing = data.memos[editingCatIdx][editingIndex];
+
+    if (existing && existing.title === title && existing.text === text) {
+      data.active = editingCatIdx;
+      closeEditor(true);
+      render({ persist: false });
+      return;
+    }
+
     data.memos[editingCatIdx][editingIndex] = {
       title,
       text,
       created: existing ? existing.created : now,
-      updated: now
+      updated: now,
+      pinned: !!(existing && existing.pinned)
     };
     data.active = editingCatIdx;
   }
 
-  closeEditor();
+  closeEditor(true);
   render();
 }
 
@@ -1034,9 +1270,9 @@ function add() { openEditor(null, null, false); }
 function del(i) {
   confirmDelete((ok) => {
     if (!ok) return;
-    data.memos[data.active].splice(i, 1);
+    trashMemoAt(data.active, i);
     render();
-  });
+  }, { message: "このメモをゴミ箱に移動しますか？", confirmLabel: "移動する" });
 }
 
 // ─────────────────────────────────────────────
@@ -1075,6 +1311,9 @@ function deleteSelectedCats() {
 
   confirmDelete((ok) => {
     if (!ok) return;
+    [...selectedCatIndexes]
+      .sort((a, b) => b - a)
+      .forEach(i => data.trash.unshift(makeCategoryTrashItem(i)));
     const keepIndexes = data.cats
       .map((_, i) => i)
       .filter((i) => !selectedCatIndexes.has(i));
@@ -1096,7 +1335,7 @@ function deleteSelectedCats() {
     render();
     renderCategoryModal();
     scrollActiveTabIntoView();
-  });
+  }, { message: "選択したカテゴリをメモごとゴミ箱に移動しますか？", confirmLabel: "移動する" });
 }
 
 function addCat() {
@@ -1125,6 +1364,7 @@ function deleteCat(i) {
   if (data.cats.length <= 1) { alert("カテゴリは最低1つ必要です。"); return; }
   confirmDelete((ok) => {
     if (!ok) return;
+    data.trash.unshift(makeCategoryTrashItem(i));
     data.cats.splice(i, 1);
     data.memos.splice(i, 1);
     if (data.active >= data.cats.length) data.active = data.cats.length - 1;
@@ -1133,7 +1373,7 @@ function deleteCat(i) {
     closeModal();
     render();
     scrollActiveTabIntoView();
-  });
+  }, { message: "このカテゴリを中のメモごとゴミ箱に移動しますか？", confirmLabel: "移動する" });
 }
 
 function scrollActiveTabIntoView() {
@@ -1150,7 +1390,7 @@ function moveCategory(dir) {
   if (next < 0 || next >= data.cats.length) return;
   data.active = next;
   resetMemoModes(true);
-  render();
+  render({ persist: false });
   scrollActiveTabIntoView();
 }
 
@@ -1196,6 +1436,7 @@ function openModal() {
   resetCategoryModalState();
   renderCategoryModal();
   document.getElementById("categoryModal").classList.remove("hidden");
+  setTimeout(() => document.getElementById("closeModalBtn").focus(), 0);
 }
 
 function closeModal() {
@@ -1239,6 +1480,25 @@ function setupSafeBackdropClose(overlay, contentSelector, onClose) {
   });
 }
 
+function setupModalFocusTrap(overlay) {
+  overlay.addEventListener("keydown", (e) => {
+    if (e.key !== "Tab" || overlay.classList.contains("hidden")) return;
+    const focusable = [...overlay.querySelectorAll(
+      'button:not([disabled]):not(.hidden), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )].filter(el => !el.closest(".hidden"));
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  });
+}
+
 // FAB・フローティングメニュー
 plusBtn.onclick = toggleFloat;
 document.getElementById("floatMemoBtn").onclick     = () => { closeFloat(); add(); };
@@ -1246,26 +1506,17 @@ document.getElementById("floatCategoryBtn").onclick = () => { closeFloat(); addC
 setupSafeBackdropClose(floatBackdrop, ".float-menu", closeFloat);
 
 // エディタ
-document.getElementById("cancelMemoBtn").onclick  = closeEditor;
+document.getElementById("cancelMemoBtn").onclick  = () => closeEditor();
 document.getElementById("saveMemoBtn").onclick    = saveEditor;
-setupSafeBackdropClose(
-  document.getElementById("memoEditorModal"),
-  ".editor-card",
-  closeEditor
-);
+setupModalFocusTrap(document.getElementById("memoEditorModal"));
 
 // カテゴリ名入力モーダル
 document.getElementById("cancelCatBtn").onclick = closeCatNameModal;
 document.getElementById("saveCatBtn").onclick   = saveCatName;
 document.getElementById("catNameInput").addEventListener("keydown", (e) => {
   if (e.key === "Enter") saveCatName();
-  if (e.key === "Escape") closeCatNameModal();
 });
-setupSafeBackdropClose(
-  document.getElementById("catNameModal"),
-  ".editor-card",
-  closeCatNameModal
-);
+setupModalFocusTrap(document.getElementById("catNameModal"));
 
 // カテゴリモーダル
 document.getElementById("menuBtn").onclick        = openModal;
@@ -1292,10 +1543,17 @@ categorySelectToggleBtn.onclick = () => {
   renderCategoryModal();
 };
 categoryDeleteSelectedBtn.onclick = deleteSelectedCats;
+setupModalFocusTrap(document.getElementById("categoryModal"));
+
+// ゴミ箱
+document.getElementById("trashBtn").onclick = openTrash;
+document.getElementById("closeTrashBtn").onclick = closeTrash;
+document.getElementById("closeTrashFooterBtn").onclick = closeTrash;
+document.getElementById("emptyTrashBtn").onclick = emptyTrash;
 setupSafeBackdropClose(
-  document.getElementById("categoryModal"),
+  document.getElementById("trashModal"),
   ".modal-card",
-  closeModal
+  closeTrash
 );
 
 // 検索
@@ -1321,6 +1579,12 @@ memoSelectBtn.onclick = toggleMemoSelectMode;
 
 // テーマ
 document.getElementById("themeBtn").onclick = () => { data.dark = !data.dark; render(); };
+
+window.addEventListener("beforeunload", (e) => {
+  if (!hasUnsavedEditorChanges()) return;
+  e.preventDefault();
+  e.returnValue = "";
+});
 
 // ─────────────────────────────────────────────
 //  バックアップ モジュール
@@ -1436,24 +1700,6 @@ async function initializeApp() {
       data = loaded;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       LocalFileStore.remember(data);
-      setStorageStatus("✅ ローカルファイルから読み込みました", {
-        type: "success"
-      });
-    } else if (localFile.available) {
-      setStorageStatus("💾 ブラウザデータをローカルファイルへ移行中...", {
-        type: "saving",
-        duration: 8000
-      });
-    } else {
-      setStorageStatus(
-        "⚠ ブラウザ保存のみ",
-        {
-          type: "warning",
-          persistent: true,
-          compact: true,
-          details: "⚠️ ブラウザ内保存モードです。データは他のブラウザと共有されません。通常は start_tabmemo.bat から起動してください。"
-        }
-      );
     }
   } catch (error) {
     LocalFileStore.available = false;

@@ -12,7 +12,7 @@ if errorlevel 1 (
 curl.exe --silent --fail http://localhost:4174/api/health >nul 2>&1
 if not errorlevel 1 goto open_app
 
-start "TabMemo Local Server" /min cmd /k "cd /d ""%~dp0"" && node server.js"
+start "TabMemo - Local Server" /min cmd /k "title TabMemo - Local Server && cd /d ""%~dp0"" && node server.js"
 
 for /l %%I in (1,1,30) do (
   curl.exe --silent --fail http://localhost:4174/api/health >nul 2>&1

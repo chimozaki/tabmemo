@@ -16,12 +16,16 @@ Tab Memo は、カテゴリタブでメモを切り替えて管理できる PWA 
 
 ### 主な機能
 - 📂 カテゴリタブ切り替え（横スクロール・スワイプ対応）
-- 📝 メモ作成・編集・削除（タイトル + 本文）
+- 📝 メモ作成・編集（タイトル + 本文）
+- 📌 ピン留め、並べ替え、複数選択、本文ワンクリックコピー
+- 🗑 メモ・カテゴリのゴミ箱、個別復元、完全削除
+- 🛡 未保存の変更を検知し、保存・破棄・編集継続を選択
 - 🔎 全カテゴリ横断検索
 - 🎨 ライト / ダークテーマ切替
 - 💽 ブラウザ間で共有できるローカルJSON自動保存
 - 💾 JSON バックアップ・復元
 - 📶 Service Worker によるオフライン対応
+- 📱 320px幅から使えるモバイルレイアウト
 
 ### 使い方
 #### 1. Node.jsを準備する（初回だけ）
@@ -56,7 +60,7 @@ node -v
 #### 起動できないとき
 
 - 「`node` が見つからない」などと表示される: Windowsを再起動してください。直らなければNode.jsのLTS版を再インストールします。
-- BATを押してもブラウザが開かない: 残っている「TabMemo Local Server」という黒い画面を閉じてから、BATをもう一度実行します。
+- BATを押してもブラウザが開かない: 残っている「TabMemo - Local Server」という黒い画面を閉じてから、BATをもう一度実行します。
 - 黒い画面がすぐ閉じる: `start_tabmemo.bat` と `server.js` が同じフォルダにあるか確認します。ZIP内のファイルをすべて一緒に展開してください。
 - 急いでメモを確認したい: `index.html` の直接起動もできますが、その場合のデータは開いたブラウザ内だけに保存されます。
 
@@ -66,6 +70,7 @@ node -v
 - ブラウザキャッシュ: `localStorage`（キー: `tabMemoPwa_v2_0`）
 - 別ブラウザでも、同じBATから起動すれば共通のローカルJSONを読み込みます
 - `index.html` を直接開いた場合はブラウザ保存のみで動作します
+- ゴミ箱の内容も通常データ・JSONバックアップに含まれます
 
 ### ファイル構成
 - `start_tabmemo.bat` : 推奨起動ファイル
@@ -79,7 +84,7 @@ node -v
 - `icon.svg` / `icon-maskable.svg` : アイコン
 
 ### リリース状態
-現在の正式版は **ver1.3.0** です。
+現在の正式版は **ver1.4.0** です。
 
 ## ☕ Support
 
@@ -105,12 +110,16 @@ It is designed to work offline.
 
 ### Features
 - 📂 Category tabs (horizontal scroll + swipe support)
-- 📝 Create, edit, and delete memos (title + body)
+- 📝 Create and edit memos (title + body)
+- 📌 Pin, reorder, multi-select, and one-click body copy
+- 🗑 Trash, restore, and permanently delete memos and categories
+- 🛡 Detect unsaved edits and choose Save, Discard, or Continue editing
 - 🔎 Search across all categories
 - 🎨 Light / dark theme toggle
 - 💽 Automatic local JSON storage shared across browsers
 - 💾 JSON backup and restore
 - 📶 Offline support via Service Worker
+- 📱 Mobile layout supported from 320px width
 
 ### Quick Start
 #### 1. Install Node.js (first time only)
@@ -144,7 +153,7 @@ If a number beginning with `v` appears, Node.js is ready. No `npm install` or ot
 #### Troubleshooting
 
 - “`node` was not found”: Restart Windows. If that does not help, reinstall the Node.js LTS release.
-- The browser does not open: Close any remaining “TabMemo Local Server” windows and run the BAT again.
+- The browser does not open: Close any remaining “TabMemo - Local Server” windows and run the BAT again.
 - The black window closes immediately: Confirm that `start_tabmemo.bat` and `server.js` are in the same fully extracted folder.
 - Need quick access: You can open `index.html` directly, but its data is stored only in that browser.
 
@@ -154,6 +163,7 @@ If a number beginning with `v` appears, Node.js is ready. No `npm install` or ot
 - Browser cache: `localStorage` (key: `tabMemoPwa_v2_0`)
 - Browsers share the same local JSON when launched through the BAT file
 - Direct `index.html` use falls back to browser-only storage
+- Trash contents are included in normal storage and JSON backups
 
 ### Project Files
 - `start_tabmemo.bat` : Recommended launcher
@@ -167,7 +177,7 @@ If a number beginning with `v` appears, Node.js is ready. No `npm install` or ot
 - `icon.svg` / `icon-maskable.svg` : Icons
 
 ### Release Status
-Current stable release is **ver1.3.0**.
+Current stable release is **ver1.4.0**.
 
 ## ☕ Support
 
@@ -192,12 +202,16 @@ Tab Memo 是一款可用分類分頁管理備忘錄的 PWA。
 
 ### 主要功能
 - 📂 分類分頁切換（支援橫向捲動與滑動）
-- 📝 新增、編輯、刪除備忘錄（標題 + 內容）
+- 📝 新增與編輯備忘錄（標題 + 內容）
+- 📌 釘選、重新排序、多選及一鍵複製內容
+- 🗑 備忘錄與分類的垃圾桶、還原及永久刪除
+- 🛡 偵測未儲存變更，可選擇儲存、放棄或繼續編輯
 - 🔎 跨分類全文搜尋
 - 🎨 淺色 / 深色主題切換
 - 💽 可在不同瀏覽器間共用的本機JSON自動儲存
 - 💾 JSON 備份與還原
 - 📶 透過 Service Worker 支援離線使用
+- 📱 支援最小320px寬度的行動版介面
 
 ### 快速開始
 #### 1. 安裝Node.js（只需首次操作）
@@ -225,7 +239,7 @@ Tab Memo 是一款可用分類分頁管理備忘錄的 PWA。
 #### 無法啟動時
 
 - 找不到「`node`」：重新啟動Windows；若仍無法使用，請重新安裝Node.js LTS版。
-- 瀏覽器未開啟：關閉殘留的「TabMemo Local Server」黑色視窗，再次執行BAT。
+- 瀏覽器未開啟：關閉殘留的「TabMemo - Local Server」黑色視窗，再次執行BAT。
 - 黑色視窗立即關閉：確認 `start_tabmemo.bat` 與 `server.js` 位於同一個已完整解壓縮的資料夾。
 - 急需查看備忘錄：可直接開啟 `index.html`，但資料只會儲存在該瀏覽器中。
 
@@ -234,6 +248,7 @@ Tab Memo 是一款可用分類分頁管理備忘錄的 PWA。
 - 上一版本: `data/tabmemo-data.previous.json`
 - 瀏覽器快取: `localStorage`（金鑰: `tabMemoPwa_v2_0`）
 - 透過 BAT 啟動時，不同瀏覽器會共用同一個本機 JSON
+- 垃圾桶內容也包含在一般儲存與JSON備份中
 
 ### 檔案結構
 - `start_tabmemo.bat` : 建議使用的啟動檔案
@@ -247,7 +262,7 @@ Tab Memo 是一款可用分類分頁管理備忘錄的 PWA。
 - `icon.svg` / `icon-maskable.svg` : 圖示
 
 ### 發行狀態
-目前正式版本為 **ver1.3.0**。
+目前正式版本為 **ver1.4.0**。
 
 ## ☕ Support
 
@@ -272,12 +287,16 @@ Está diseñada para funcionar también sin conexión.
 
 ### Funciones
 - 📂 Pestañas por categoría (scroll horizontal y deslizamiento)
-- 📝 Crear, editar y eliminar notas (título + contenido)
+- 📝 Crear y editar notas (título + contenido)
+- 📌 Fijar, reordenar, seleccionar varias y copiar el contenido con un clic
+- 🗑 Papelera, restauración y eliminación permanente de notas y categorías
+- 🛡 Detección de cambios sin guardar con opciones para guardar, descartar o seguir editando
 - 🔎 Búsqueda en todas las categorías
 - 🎨 Cambio entre tema claro y oscuro
 - 💽 Almacenamiento JSON local automático compartido entre navegadores
 - 💾 Respaldo y restauración en JSON
 - 📶 Soporte offline mediante Service Worker
+- 📱 Diseño móvil compatible desde 320px de ancho
 
 ### Inicio rápido
 #### 1. Instalar Node.js (solo la primera vez)
@@ -305,7 +324,7 @@ Para comprobarlo, abre el Símbolo del sistema desde Inicio y escribe `node -v`.
 #### Solución de problemas
 
 - No se encuentra “`node`”: Reinicia Windows. Si no se soluciona, reinstala la versión LTS de Node.js.
-- El navegador no se abre: Cierra las ventanas “TabMemo Local Server” que queden abiertas y ejecuta de nuevo el BAT.
+- El navegador no se abre: Cierra las ventanas “TabMemo - Local Server” que queden abiertas y ejecuta de nuevo el BAT.
 - La ventana negra se cierra inmediatamente: Comprueba que `start_tabmemo.bat` y `server.js` estén juntos en la carpeta completamente extraída.
 - Acceso rápido: Puedes abrir `index.html` directamente, pero sus datos solo se guardarán en ese navegador.
 
@@ -314,6 +333,7 @@ Para comprobarlo, abre el Símbolo del sistema desde Inicio y escribe `node -v`.
 - Versión anterior: `data/tabmemo-data.previous.json`
 - Caché del navegador: `localStorage` (clave: `tabMemoPwa_v2_0`)
 - Los navegadores comparten el mismo JSON local al iniciar mediante el BAT
+- El contenido de la papelera se incluye en el almacenamiento normal y en los respaldos JSON
 
 ### Estructura del proyecto
 - `start_tabmemo.bat` : Iniciador recomendado
@@ -327,7 +347,7 @@ Para comprobarlo, abre el Símbolo del sistema desde Inicio y escribe `node -v`.
 - `icon.svg` / `icon-maskable.svg` : Iconos
 
 ### Estado de lanzamiento
-La versión estable actual es **ver1.3.0**.
+La versión estable actual es **ver1.4.0**.
 
 ## ☕ Support
 

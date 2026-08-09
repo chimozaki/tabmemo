@@ -1,3 +1,68 @@
+# 🎉 Tab Memo ver1.4.0 Release Notes
+
+## ✨ 機能追加 / New Features
+
+Tab Memo ver1.4.0 は、誤削除と未保存によるデータ損失を防ぎ、モバイル操作を改善するアップデートです。
+Tab Memo ver1.4.0 protects against accidental deletion and unsaved edits while improving mobile usability.
+
+---
+
+## ✅ 追加・改善内容 / Updates
+
+- 🗑 メモを削除するとゴミ箱へ移動 / Move deleted memos to Trash
+- 📁 カテゴリを中のメモごとゴミ箱へ移動 / Move deleted categories and their memos to Trash
+- ♻️ ゴミ箱からメモ・カテゴリを個別に復元 / Restore individual memos and categories from Trash
+- ❌ 個別の完全削除と「ゴミ箱を空にする」に対応 / Permanently delete individual items or empty Trash
+- 🔢 バックアップ・復元の横にゴミ箱と件数を常時表示 / Show Trash and its item count beside Backup and Restore
+- 🛡 メモを変更して閉じる際に「保存して閉じる・保存せず閉じる・キャンセル」を表示 / Offer Save, Discard, or Cancel when closing an edited memo
+- 🚪 ブラウザ更新・終了時にも未保存変更を警告 / Warn about unsaved edits when refreshing or leaving the page
+- 🔒 メモ編集・カテゴリ一覧・カテゴリ名入力を明示ボタンでのみ閉じる仕様へ変更 / Require explicit buttons to close memo, category-list, and category-name dialogs
+- ⌨️ モーダル内にキーボードフォーカスを維持 / Keep keyboard focus inside active dialogs
+- 📋 コピー完了通知を大きく見やすいデザインへ変更 / Make copy feedback larger and easier to notice
+- 📱 640px以下でタイトルと操作ボタンを上下段に分離 / Split the title and action controls into rows at 640px and below
+- 📱 320px・390px幅でヘッダー、ボトム操作、追加ボタンが重ならないよう調整 / Prevent overlap among the header, bottom actions, and add button at 320px and 390px widths
+- 🖥️ 起動中のコマンド画面を `TabMemo - Local Server` と識別できるよう改善 / Label the running command window as `TabMemo - Local Server`
+
+---
+
+## 🛠 不具合修正 / Fixes
+
+- 📌 固定メモを編集後に閉じてもピン留めが外れないよう修正 / Preserve pin state after editing a pinned memo
+- 💾 タブ移動では保存処理を実行せず、テーマ変更時も不要な保存完了トーストを出さないよう修正 / Avoid saving on tab switches and suppress unnecessary save-complete toasts after theme changes
+- 🔕 通常保存時の不要なトースト通知を廃止 / Remove routine save toast notifications
+- 🌐 `index.html` 直接起動や静的ホスティングで、ブラウザ保存へ静かに切り替えるよう変更 / Silently fall back to browser storage for direct `index.html` use and static hosting
+- ⚠️ 画面下部の常設「ブラウザ保存のみ」警告を廃止 / Remove the persistent browser-only warning from the bottom of the screen
+- 🖱️ モーダル背景のクリックで入力画面が意図せず閉じる問題を解消 / Prevent dialogs from closing when their backdrop is clicked
+
+---
+
+## 🔄 データ互換性 / Data Compatibility
+
+- 既存のver1.3.0データは自動的にver1.4.0形式へ移行されます / Existing ver1.3.0 data is migrated automatically
+- 新しい `trash` データ領域は初回読み込み時に自動追加されます / The new `trash` data area is added automatically on first load
+- ゴミ箱の内容もローカルJSON、ブラウザ保存、JSONバックアップに含まれます / Trash contents are included in local JSON, browser storage, and JSON backups
+- 保存キー `tabMemoPwa_v2_0` は変更していません / The storage key `tabMemoPwa_v2_0` remains unchanged
+
+---
+
+## 🛠 技術情報 / Technical Notes
+
+- アプリ内・manifest・Service Workerを `ver1.4.0` に更新 / Updated the app, manifest, and Service Worker to `ver1.4.0`
+- Service Workerキャッシュ名を `tab-memo-v1-4-0` に更新 / Updated the Service Worker cache name to `tab-memo-v1-4-0`
+- 保存APIが404を返す静的環境ではエラー扱いにせずブラウザ保存を利用 / Use browser storage without an error when the save API is unavailable on static hosting
+- メモ・カテゴリの削除確認は「ゴミ箱へ移動」と分かる文言へ変更 / Clarified deletion prompts to say items are moved to Trash
+
+---
+
+## ⚠️ 既知の制限 / Known Limitations
+
+- `index.html` を直接開いた場合、データはそのブラウザ内に保存されます / Direct `index.html` use stores data in that browser
+- ローカルJSONをブラウザ間で共有する場合は `start_tabmemo.bat` を使用してください / Use `start_tabmemo.bat` to share local JSON data across browsers
+- ゴミ箱は自動削除されません。必要に応じて手動で空にしてください / Trash is not deleted automatically; empty it manually when needed
+- Google Driveバックアップは現在未実装です / Google Drive backup is not implemented yet
+
+---
+
 # 🎉 Tab Memo ver1.3.0 Release Notes
 
 ## ✨ 機能追加 / New Features
