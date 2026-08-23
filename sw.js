@@ -1,8 +1,8 @@
-// Tab Memo ver1.4.1 Service Worker
+// Tab Memo ver1.4.2 Service Worker
 // - キャッシュ対象はローカルアセットのみ
 // - 外部リクエスト（api等）はキャッシュしない
 
-const CACHE_NAME = "tab-memo-v1-4-1";
+const CACHE_NAME = "tab-memo-v1-4-2";
 const ASSETS = [
   "./",
   "./index.html",

@@ -1,3 +1,49 @@
+# 🎉 Tab Memo ver1.4.2 Release Notes
+
+## ✨ 概要 / Overview
+
+Tab Memo ver1.4.2 は、スマートフォンでメモ一覧をより広く使えるよう、ヘッダーとカテゴリ行をコンパクトにしたパッチアップデートです。
+Tab Memo ver1.4.2 makes more room for memos on smartphones with a compact header and category row.
+
+---
+
+## 📱 モバイルUI改善 / Mobile UI Improvements
+
+- 📐 タイトルを22px、320px幅では20pxへ縮小 / Reduce the title to 22px, or 20px at 320px width
+- ↔️ タイトルと4つの操作ボタンを2段から1段へ整理 / Place the title and four action buttons in one row instead of two
+- 🔘 検索・並べ替え・選択・テーマを34px、320px幅では32pxへ縮小 / Reduce Search, Reorder, Select, and Theme controls to 34px, or 32px at 320px
+- 🏷️ モバイルではバージョンとサブタイトルを非表示 / Hide the version and subtitle on mobile
+- 🔀 並べ替えと選択をアイコン表示にし、操作名はアクセシビリティ情報として維持 / Use compact icons for Reorder and Select while preserving accessible names
+- 🔎 検索中だけ高さ40pxの検索欄を表示 / Show a compact 40px search field only while searching
+- 📂 カテゴリ行を45pxから40pxへ縮小 / Reduce the category row from 45px to 40px
+- 🖥️ デスクトップのタイトル、ラベル、ボタンサイズは従来どおり維持 / Keep desktop title, labels, and button sizes unchanged
+
+---
+
+## ♿ 操作状態・アクセシビリティ / Interaction State & Accessibility
+
+- 🔎 検索ボタンへ開閉状態と強調表示を追加 / Add expanded state and active styling to Search
+- ✅ 並べ替え・複数選択ボタンへON/OFF状態を追加 / Expose pressed state for Reorder and Multi-select
+- 🏷️ アイコンだけでも操作内容と終了状態が伝わるラベルを追加 / Add labels that describe each icon action and its exit state
+- 📏 320px・390px幅で横スクロールや操作ボタンの重なりがないことを確認 / Verify no horizontal scrolling or control overlap at 320px and 390px
+
+---
+
+## 🔄 データ互換性 / Data Compatibility
+
+- 保存形式と保存キー `tabMemoPwa_v2_0` は変更していません / The data format and `tabMemoPwa_v2_0` storage key remain unchanged
+- ver1.4.1のローカルJSON・ブラウザデータ・バックアップをそのまま利用できます / Existing ver1.4.1 local JSON, browser data, and backups remain compatible
+
+---
+
+## 🛠 技術情報 / Technical Notes
+
+- アプリ内・manifest・Service Workerを `ver1.4.2` に更新 / Update the app, manifest, and Service Worker to `ver1.4.2`
+- Service Workerキャッシュ名を `tab-memo-v1-4-2` に更新 / Update the Service Worker cache name to `tab-memo-v1-4-2`
+- READMEの4言語説明と画面例を更新 / Update all four README languages and the screenshot
+
+---
+
 # 🎉 Tab Memo ver1.4.1 Release Notes
 
 ## ✨ 概要 / Overview

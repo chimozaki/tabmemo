@@ -1,5 +1,7 @@
 # 📒 TabMemo
-![Tab Memo](tabmemo_exsample.png)
+![Tab Memo desktop](tabmemo_exsample.png)
+
+<img src="tabmemo_mobile.png" alt="Tab Memo mobile" width="390">
 ---
 
 ## 🇯🇵 日本語
@@ -26,7 +28,7 @@ Tab Memo は、カテゴリタブでメモを切り替えて管理できる PWA 
 - 💽 ブラウザ間で共有できるローカルJSON自動保存
 - 💾 JSON バックアップ・復元
 - 📶 Service Worker によるオフライン対応
-- 📱 320px幅から使えるモバイルレイアウト
+- 📱 320px幅から使えるモバイルレイアウト。タイトルと操作を1段へ圧縮し、メモ領域を優先
 - 🌐 GitHub Pagesで利用できるインストール不要のWeb版
 - 🕘 バックアップ画面に最終バックアップ日時を表示
 
@@ -96,7 +98,7 @@ node -v
 - `icon.svg` / `icon-maskable.svg` : アイコン
 
 ### リリース状態
-現在の正式版は **ver1.4.1** です。
+現在の正式版は **ver1.4.2** です。
 
 ## ☕ Support
 
@@ -132,7 +134,7 @@ It is designed to work offline.
 - 💽 Automatic local JSON storage shared across browsers
 - 💾 JSON backup and restore
 - 📶 Offline support via Service Worker
-- 📱 Mobile layout supported from 320px width
+- 📱 Mobile layout from 320px with a compact single-row header that prioritizes memo space
 - 🌐 Installation-free web version on GitHub Pages
 - 🕘 Last backup time shown in the backup dialog
 
@@ -201,7 +203,7 @@ If a number beginning with `v` appears, Node.js is ready. No `npm install` or ot
 - `icon.svg` / `icon-maskable.svg` : Icons
 
 ### Release Status
-Current stable release is **ver1.4.1**.
+Current stable release is **ver1.4.2**.
 
 ## ☕ Support
 
@@ -236,7 +238,7 @@ Tab Memo 是一款可用分類分頁管理備忘錄的 PWA。
 - 💽 可在不同瀏覽器間共用的本機JSON自動儲存
 - 💾 JSON 備份與還原
 - 📶 透過 Service Worker 支援離線使用
-- 📱 支援最小320px寬度的行動版介面
+- 📱 支援最小320px寬度，使用單列精簡標頭優先保留備忘錄空間
 - 🌐 可於GitHub Pages使用的免安裝網頁版
 - 🕘 在備份視窗顯示上次備份時間
 
@@ -298,7 +300,7 @@ Tab Memo 是一款可用分類分頁管理備忘錄的 PWA。
 - `icon.svg` / `icon-maskable.svg` : 圖示
 
 ### 發行狀態
-目前正式版本為 **ver1.4.1**。
+目前正式版本為 **ver1.4.2**。
 
 ## ☕ Support
 
@@ -333,7 +335,7 @@ Está diseñada para funcionar también sin conexión.
 - 💽 Almacenamiento JSON local automático compartido entre navegadores
 - 💾 Respaldo y restauración en JSON
 - 📶 Soporte offline mediante Service Worker
-- 📱 Diseño móvil compatible desde 320px de ancho
+- 📱 Diseño móvil desde 320px con una cabecera compacta de una fila que prioriza el espacio para notas
 - 🌐 Versión web sin instalación en GitHub Pages
 - 🕘 Fecha y hora del último respaldo en el diálogo de respaldo
 
@@ -395,7 +397,7 @@ Para comprobarlo, abre el Símbolo del sistema desde Inicio y escribe `node -v`.
 - `icon.svg` / `icon-maskable.svg` : Iconos
 
 ### Estado de lanzamiento
-La versión estable actual es **ver1.4.1**.
+La versión estable actual es **ver1.4.2**.
 
 ## ☕ Support
 

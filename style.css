@@ -1,5 +1,5 @@
 /* =============================================
-   Tab Memo ver1.4.1 stylesheet
+   Tab Memo ver1.4.2 stylesheet
    ============================================= */
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -149,6 +149,10 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
   font-weight: 800;
   line-height: 1;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 
 /* =============================================
@@ -1412,6 +1416,115 @@ body.dark .toast.error {
   margin: -6px 0 16px;
   font-size: 14px;
   color: var(--sub);
+}
+
+/* =============================================
+   モバイル：メモ領域を優先したコンパクトヘッダー
+   ============================================= */
+@media (max-width: 640px) {
+  .hero {
+    grid-template-columns: minmax(82px, 1fr) auto;
+    align-items: center;
+    gap: 6px;
+    padding: max(8px, env(safe-area-inset-top, 8px)) 10px 6px;
+  }
+
+  .hero-title-row {
+    align-items: center;
+    gap: 0;
+  }
+
+  .hero h1 {
+    font-size: 22px;
+    line-height: 1;
+  }
+
+  .app-version,
+  .hero p {
+    display: none;
+  }
+
+  .hero-actions {
+    width: auto;
+    display: flex;
+    justify-self: end;
+    gap: 4px;
+    padding: 0;
+  }
+
+  .hero-btn,
+  .hero-btn.hero-mode-btn {
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    padding: 0;
+    border-radius: 10px;
+    font-size: 16px;
+  }
+
+  .hero-btn.hero-mode-btn {
+    display: grid;
+    place-items: center;
+  }
+
+  .hero-btn-label {
+    display: none;
+  }
+
+  .search-panel {
+    padding: 0 8px 6px;
+  }
+
+  .search-panel input {
+    min-height: 40px;
+    padding: 8px 11px;
+    border-radius: 10px;
+    font-size: 16px;
+  }
+
+  .search-result-count {
+    padding-top: 3px;
+    font-size: 11px;
+  }
+
+  .tab-strip-wrap {
+    grid-template-columns: 40px minmax(0, 1fr);
+    min-height: 40px;
+  }
+
+  .folder-tab {
+    font-size: 18px;
+  }
+
+  .tab {
+    min-width: 135px;
+    padding: 7px 11px;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 360px) {
+  .hero {
+    gap: 4px;
+    padding-inline: 8px;
+  }
+
+  .hero h1 {
+    font-size: 20px;
+  }
+
+  .hero-actions {
+    gap: 3px;
+  }
+
+  .hero-btn,
+  .hero-btn.hero-mode-btn {
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    font-size: 15px;
+  }
 }
 .backup-last-time {
   margin: -7px 0 14px;

@@ -1,5 +1,5 @@
 // =============================================
-//  Tab Memo 1.4.1
+//  Tab Memo 1.4.2
 //  GitHub Pages公開・最終バックアップ日時表示
 //
 //  主な変更:
@@ -198,7 +198,7 @@ function normalizeData(d) {
   if (typeof d.active !== "number" || d.active < 0 || d.active >= d.cats.length) d.active = 0;
   if (typeof d.dark !== "boolean") d.dark = false;
   if (typeof d.lastBackupAt !== "string") d.lastBackupAt = null;
-  d.version = "1.4.1";
+  d.version = "1.4.2";
   return d;
 }
 
@@ -224,7 +224,7 @@ function load() {
   } catch (e) {
     console.warn("Tab Memo: load error", e);
   }
-  return { version: "1.4.1", cats: ["メモ"], active: 0, memos: [[]], trash: [], lastBackupAt: null, dark: false };
+  return { version: "1.4.2", cats: ["メモ"], active: 0, memos: [[]], trash: [], lastBackupAt: null, dark: false };
 }
 
 // ─────────────────────────────────────────────
@@ -367,6 +367,10 @@ function renderTabs() {
 function enterSearchMode() {
   resetMemoModes(true);
   isSearchMode = true;
+  const searchButton = document.getElementById("searchBtn");
+  searchButton.classList.add("active");
+  searchButton.setAttribute("aria-expanded", "true");
+  searchButton.title = "検索を閉じる";
   document.body.classList.add("search-mode");
   tabStripWrap.classList.add("hidden");
   renderSearch();
@@ -374,6 +378,10 @@ function enterSearchMode() {
 
 function exitSearchMode() {
   isSearchMode = false;
+  const searchButton = document.getElementById("searchBtn");
+  searchButton.classList.remove("active");
+  searchButton.setAttribute("aria-expanded", "false");
+  searchButton.title = "検索";
   document.body.classList.remove("search-mode");
   listEl.classList.remove("search-empty");
   document.body.classList.remove("empty-list");
@@ -678,8 +686,12 @@ function emptyTrash() {
 function syncMemoModeButtons() {
   memoReorderBtn.classList.toggle("active", memoReorderMode);
   memoSelectBtn.classList.toggle("active", memoSelectMode);
+  memoReorderBtn.setAttribute("aria-pressed", String(memoReorderMode));
+  memoSelectBtn.setAttribute("aria-pressed", String(memoSelectMode));
   memoReorderBtn.title = memoReorderMode ? "メモの並び替えを終了" : "メモを並び替え";
   memoSelectBtn.title = memoSelectMode ? "メモの複数選択を終了" : "メモを複数選択";
+  memoReorderBtn.setAttribute("aria-label", memoReorderMode ? "メモの並び替えを終了" : "メモを並び替え");
+  memoSelectBtn.setAttribute("aria-label", memoSelectMode ? "メモの複数選択を終了" : "メモを複数選択");
 }
 
 function resetMemoModes(skipRender = false) {
